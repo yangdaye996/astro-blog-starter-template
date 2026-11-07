@@ -1,21 +1,27 @@
 ---
-import { type CollectionEntry, getCollection } from 'astro:content';
-import BlogPost from '../../layouts/BlogPost.astro';
-import { render } from 'astro:content';
+import { type CollectionEntry, getCollection, render } from "astro:content";
+import BlogPost from "../../layouts/BlogPost.astro";
+import { sortDescBy, neighbours } from "../../utils/posts";
 
 export async function getStaticPaths() {
-	const posts = await getCollection('blog');
+	const posts = await getCollection("blog");
 	return posts.map((post) => ({
 		params: { slug: post.id },
-		props: post,
+		props: { post },
 	}));
 }
-type Props = CollectionEntry<'blog'>;
 
-const post = Astro.props;
-const { Content } = await render(post);
+interface Props {
+	post: CollectionEntry<"blog">;
+}
+
+const { post } = Astro.props;
+const { Content, headings } = await render(post);
+
+const all = sortDescBy(await getCollection("blog"), (p) => p.data.pubDate);
+const { prev, next } = neighbours(all, post.id);
 ---
 
-<BlogPost {...post.data}>
+<BlogPost post={post} headings={headings} prev={prev} next={next}>
 	<Content />
 </BlogPost>

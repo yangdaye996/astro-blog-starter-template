@@ -1,0 +1,55 @@
+---
+import { SITE } from "../consts";
+
+// 社交链接统一用中文文字标签，不塞图标：
+// 知乎/B站的官方图标路径复杂，画错反而显得廉价，文字更干净也更符合清爽基调。
+const LABELS: Record<keyof typeof SITE.social, string> = {
+	github: "GitHub",
+	zhihu: "知乎",
+	bilibili: "B 站",
+	email: "邮箱",
+};
+
+// email 允许只填地址，自动补 mailto:
+const links = Object.entries(SITE.social)
+	.filter((entry): entry is [keyof typeof SITE.social, string] => Boolean(entry[1]))
+	.map(([key, value]) => ({
+		key: key as keyof typeof SITE.social,
+		label: LABELS[key as keyof typeof SITE.social],
+		href: key === "email" && !value.startsWith("mailto:") ? `mailto:${value}` : value,
+	}));
+---
+
+{
+	links.length > 0 && (
+		<ul class="social-links">
+			{links.map((link) => (
+				<li>
+					<a href={link.href} target={link.key === "email" ? undefined : "_blank"} rel="me noreferrer">
+						{link.label}
+					</a>
+				</li>
+			))}
+		</ul>
+	)
+}
+
+<style>
+	.social-links {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.25rem 1rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.social-links a {
+		color: var(--ink-3);
+		font-size: 0.8125rem;
+		transition: color 0.15s ease;
+	}
+	.social-links a:hover {
+		color: var(--accent);
+	}
+</style>

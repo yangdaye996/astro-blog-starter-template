@@ -1,0 +1,102 @@
+---
+import { getCollection, render } from "astro:content";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import EmptyState from "../components/EmptyState.astro";
+import FormattedDate from "../components/FormattedDate.astro";
+import { sortDescBy, groupByYear } from "../utils/posts";
+
+const notes = sortDescBy(await getCollection("notes"), (n) => n.data.date);
+
+// 随想无标题，正文即内容，逐条渲染成 HTML 后交给时间轴
+const rendered = await Promise.all(
+	notes.map(async (note) => {
+		const { Content } = await render(note);
+		return { note, Content };
+	}),
+);
+
+const groups = groupByYear(rendered, (r) => r.note.data.date);
+---
+
+<BaseLayout title="随想" description={`共 ${notes.length} 条随想，按时间倒序排列。`}>
+	<div class="container container-narrow">
+		<header class="page-head">
+			<h1>随想</h1>
+			<p>不成文的短记录，共 {notes.length} 条</p>
+		</header>
+
+		{
+			rendered.length > 0 ? (
+				<div class="timeline">
+					{groups.map((group) => (
+						<section class="timeline-group">
+							<h2 class="timeline-year">
+								{group.year} 年<span class="timeline-count">{group.entries.length} 条</span>
+							</h2>
+							{group.entries.map(({ note, Content }) => (
+								<article class="note-card">
+									<div class="meta-row">
+										<FormattedDate date={note.data.date} />
+										{note.data.tags.length > 0 && (
+											<>
+												<span class="sep" aria-hidden="true">·</span>
+												<ul class="tag-list">
+													{note.data.tags.map((tag) => (
+														<li>
+															<span class="badge badge-plain">#{tag}</span>
+														</li>
+													))}
+												</ul>
+											</>
+										)}
+									</div>
+									<div class="note-body">
+										<Content />
+									</div>
+								</article>
+							))}
+						</section>
+					))}
+				</div>
+			) : (
+				<EmptyState
+					title="还没有随想"
+					hint="把短文放进 src/content/notes/，只需 frontmatter 里的 date 字段。"
+				/>
+			)
+		}
+	</div>
+</BaseLayout>
+
+<style>
+	.note-card {
+		margin-left: 0;
+	}
+	.note-card::before {
+		content: "";
+		position: absolute;
+		left: calc(-1.5rem + 1px);
+		top: 1.35rem;
+		width: 7px;
+		height: 7px;
+		background: var(--surface);
+		border: 2px solid var(--line-strong);
+		border-radius: 50%;
+	}
+	.tag-list {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.35rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.timeline-year .timeline-count {
+		margin-left: 0.6rem;
+	}
+	@media (max-width: 720px) {
+		.note-card::before {
+			left: calc(-1.15rem + 1px);
+		}
+	}
+</style>

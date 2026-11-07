@@ -1,0 +1,78 @@
+---
+import type { CollectionEntry } from "astro:content";
+import FormattedDate from "./FormattedDate.astro";
+import { countWords, readingMinutes } from "../utils/posts";
+
+interface Props {
+	post: CollectionEntry<"blog">;
+}
+
+const { post } = Astro.props;
+const { title, description, pubDate, heroImage, tags, category } = post.data;
+
+const body = post.body ?? "";
+const { total } = countWords(body);
+const minutes = readingMinutes(body);
+---
+
+<article
+	class="post-card"
+	data-tags={tags.join("|")}
+	data-category={category ?? ""}
+>
+	{heroImage && <img class="post-card-cover" src={heroImage} alt="" loading="lazy" decoding="async" />}
+	<h2 class="post-card-title">
+		<a href={`/blog/${post.id}/`}>{title}</a>
+	</h2>
+	<p class="post-card-desc">{description}</p>
+	<div class="meta-row">
+		<FormattedDate date={pubDate} variant="short" />
+		{category && <span class="badge">{category}</span>}
+		<span class="sep" aria-hidden="true">·</span>
+		<span>{total} 字</span>
+		<span class="sep" aria-hidden="true">·</span>
+		<span>约 {minutes} 分钟</span>
+		{
+			tags.length > 0 && (
+				<>
+					<span class="sep" aria-hidden="true">·</span>
+					<ul class="tag-list">
+						{tags.map((tag) => (
+							<li>
+								<span class="badge badge-plain">#{tag}</span>
+							</li>
+						))}
+					</ul>
+				</>
+			)
+		}
+	</div>
+</article>
+
+<style>
+	/* 标题链接用伪元素铺满整张卡片，让卡片任意位置可点，
+	   同时避免把整个卡片做成 <a> 而嵌套列表与徽标。 */
+	.post-card {
+		position: relative;
+	}
+	.post-card-title a {
+		color: inherit;
+	}
+	.post-card-title a::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		border-radius: var(--radius);
+	}
+	.post-card:hover .post-card-title a {
+		color: var(--accent);
+	}
+	.tag-list {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.35rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+</style>

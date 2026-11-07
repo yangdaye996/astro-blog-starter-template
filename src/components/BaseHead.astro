@@ -1,47 +1,47 @@
 ---
-// Import the global.css file here so that it is included on
-// all pages through the use of the <BaseHead /> component.
-import '../styles/global.css';
+import "../styles/global.css";
+import { SITE } from "../consts";
 
 interface Props {
 	title: string;
-	description: string;
+	description?: string;
 	image?: string;
 }
 
-const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const { title, description = SITE.description, image } = Astro.props;
 
-const { title, description, image = '/blog-placeholder-1.jpg' } = Astro.props;
+const siteOrigin = Astro.site ?? new URL(SITE.url);
+const canonicalURL = new URL(Astro.url.pathname, siteOrigin);
+const fullTitle = title === SITE.title ? title : `${title} · ${SITE.title}`;
+// 无封面图时不输出 og:image，避免像模板那样回退到一张占位图
+const ogImage = image ? new URL(image, siteOrigin) : null;
 ---
 
-<!-- Global Metadata -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 <meta name="generator" content={Astro.generator} />
 
-<!-- Font preloads -->
-<link rel="preload" href="/fonts/atkinson-regular.woff" as="font" type="font/woff" crossorigin />
-<link rel="preload" href="/fonts/atkinson-bold.woff" as="font" type="font/woff" crossorigin />
+<!-- 标题层子集字体，构建期由 scripts/subset-heading-font.mjs 生成（ADR-0003） -->
+<link rel="preload" href="/fonts/heading-subset.woff2" as="font" type="font/woff2" crossorigin />
 
-<!-- Canonical URL -->
 <link rel="canonical" href={canonicalURL} />
 
-<!-- Primary Meta Tags -->
-<title>{title}</title>
-<meta name="title" content={title} />
+<title>{fullTitle}</title>
+<meta name="title" content={fullTitle} />
 <meta name="description" content={description} />
+<meta name="author" content={SITE.author} />
 
-<!-- Open Graph / Facebook -->
 <meta property="og:type" content="website" />
 <meta property="og:url" content={Astro.url} />
-<meta property="og:title" content={title} />
+<meta property="og:title" content={fullTitle} />
 <meta property="og:description" content={description} />
-<meta property="og:image" content={new URL(image, Astro.url)} />
+<meta property="og:locale" content="zh_CN" />
+<meta property="og:site_name" content={SITE.title} />
+{ogImage && <meta property="og:image" content={ogImage} />}
 
-<!-- Twitter -->
-<meta property="twitter:card" content="summary_large_image" />
-<meta property="twitter:url" content={Astro.url} />
-<meta property="twitter:title" content={title} />
-<meta property="twitter:description" content={description} />
-<meta property="twitter:image" content={new URL(image, Astro.url)} />
+<meta name="twitter:card" content={ogImage ? "summary_large_image" : "summary"} />
+<meta name="twitter:url" content={Astro.url} />
+<meta name="twitter:title" content={fullTitle} />
+<meta name="twitter:description" content={description} />
+{ogImage && <meta name="twitter:image" content={ogImage} />}

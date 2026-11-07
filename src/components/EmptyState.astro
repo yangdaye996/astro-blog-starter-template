@@ -1,0 +1,22 @@
+---
+interface Props {
+	title: string;
+	hint?: string;
+}
+
+const { title, hint } = Astro.props;
+---
+
+<div class="empty-state">
+	<strong>{title}</strong>
+	{hint && <p class="empty-hint">{hint}</p>}
+	<slot />
+</div>
+
+<style>
+	.empty-hint {
+		margin: 0;
+		font-size: 0.875rem;
+		line-height: 1.7;
+	}
+</style>

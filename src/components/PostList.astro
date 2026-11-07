@@ -1,0 +1,29 @@
+---
+import type { CollectionEntry } from "astro:content";
+import PostCard from "./PostCard.astro";
+import EmptyState from "./EmptyState.astro";
+
+interface Props {
+	posts: CollectionEntry<"blog">[];
+	emptyTitle?: string;
+	emptyHint?: string;
+}
+
+const {
+	posts,
+	emptyTitle = "还没有文章",
+	emptyHint = "把 Markdown 放进 src/content/blog/，重新构建后就会出现在这里。",
+} = Astro.props;
+---
+
+{
+	posts.length > 0 ? (
+		<div class="card-stream">
+			{posts.map((post) => (
+				<PostCard post={post} />
+			))}
+		</div>
+	) : (
+		<EmptyState title={emptyTitle} hint={emptyHint} />
+	)
+}

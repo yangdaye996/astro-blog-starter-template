@@ -1,85 +1,213 @@
 ---
-import type { CollectionEntry } from 'astro:content';
-import BaseHead from '../components/BaseHead.astro';
-import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
-import FormattedDate from '../components/FormattedDate.astro';
+import type { CollectionEntry } from "astro:content";
+import "katex/dist/katex.min.css";
+import "../styles/prose.css";
+import BaseLayout from "./BaseLayout.astro";
+import Toc from "../components/Toc.astro";
+import CodeCopy from "../components/CodeCopy.astro";
+import FormattedDate from "../components/FormattedDate.astro";
+import { countWords, readingMinutes } from "../utils/posts";
 
-type Props = CollectionEntry<'blog'>['data'];
+interface Props {
+	post: CollectionEntry<"blog">;
+	headings: { depth: number; slug: string; text: string }[];
+	prev: CollectionEntry<"blog"> | null;
+	next: CollectionEntry<"blog"> | null;
+}
 
-const { title, description, pubDate, updatedDate, heroImage } = Astro.props;
+const { post, headings, prev, next } = Astro.props;
+const { title, description, pubDate, updatedDate, heroImage, tags, category } = post.data;
+
+const body = post.body ?? "";
+const { total } = countWords(body);
+const minutes = readingMinutes(body);
 ---
 
-<html lang="en">
-	<head>
-		<BaseHead title={title} description={description} />
-		<style>
-			main {
-				width: calc(100% - 2em);
-				max-width: 100%;
-				margin: 0;
-			}
-			.hero-image {
-				width: 100%;
-			}
-			.hero-image img {
-				display: block;
-				margin: 0 auto;
-				border-radius: 12px;
-				box-shadow: var(--box-shadow);
-			}
-			.prose {
-				width: 720px;
-				max-width: calc(100% - 2em);
-				margin: auto;
-				padding: 1em;
-				color: rgb(var(--gray-dark));
-			}
-			.title {
-				margin-bottom: 1em;
-				padding: 1em 0;
-				text-align: center;
-				line-height: 1;
-			}
-			.title h1 {
-				margin: 0 0 0.5em 0;
-			}
-			.date {
-				margin-bottom: 0.5em;
-				color: rgb(var(--gray));
-			}
-			.last-updated-on {
-				font-style: italic;
-			}
-		</style>
-	</head>
+<BaseLayout title={title} description={description} image={heroImage}>
+	<div class="container">
+		<article class="article">
+			{heroImage && <img class="article-cover" src={heroImage} alt="" decoding="async" />}
 
-	<body>
-		<Header />
-		<main>
-			<article>
-				<div class="hero-image">
-					{heroImage && <img width={1020} height={510} src={heroImage} alt="" />}
+			<header class="article-head">
+				<h1>{title}</h1>
+				<div class="meta-row">
+					<FormattedDate date={pubDate} />
+					{category && <span class="badge">{category}</span>}
+					<span class="sep" aria-hidden="true">·</span>
+					<span>{total} 字</span>
+					<span class="sep" aria-hidden="true">·</span>
+					<span>约 {minutes} 分钟读完</span>
+					{updatedDate && (
+						<>
+							<span class="sep" aria-hidden="true">·</span>
+							<span class="updated">
+								最后更新 <FormattedDate date={updatedDate} variant="short" />
+							</span>
+						</>
+					)}
 				</div>
+				<p class="article-desc">{description}</p>
+				{
+					tags.length > 0 && (
+						<ul class="tag-list">
+							{tags.map((tag) => (
+								<li>
+									<span class="badge badge-plain">#{tag}</span>
+								</li>
+							))}
+						</ul>
+					)
+				}
+			</header>
+
+			<div class="article-body">
 				<div class="prose">
-					<div class="title">
-						<div class="date">
-							<FormattedDate date={pubDate} />
-							{
-								updatedDate && (
-									<div class="last-updated-on">
-										Last updated on <FormattedDate date={updatedDate} />
-									</div>
-								)
-							}
-						</div>
-						<h1>{title}</h1>
-						<hr />
-					</div>
 					<slot />
 				</div>
-			</article>
-		</main>
-		<Footer />
-	</body>
-</html>
+				<aside class="article-aside">
+					<Toc headings={headings} />
+				</aside>
+			</div>
+
+			{
+				(prev || next) && (
+					<nav class="post-nav" aria-label="文章翻页">
+						{prev ? (
+							<a class="post-nav-link prev" href={`/blog/${prev.id}/`} rel="prev">
+								<span class="post-nav-label">上一篇</span>
+								<span class="post-nav-title">{prev.data.title}</span>
+							</a>
+						) : (
+							<span />
+						)}
+						{next ? (
+							<a class="post-nav-link next" href={`/blog/${next.id}/`} rel="next">
+								<span class="post-nav-label">下一篇</span>
+								<span class="post-nav-title">{next.data.title}</span>
+							</a>
+						) : (
+							<span />
+						)}
+					</nav>
+				)
+			}
+		</article>
+	</div>
+	<CodeCopy />
+</BaseLayout>
+
+<style>
+	.article {
+		max-width: 100%;
+	}
+
+	.article-cover {
+		display: block;
+		width: 100%;
+		aspect-ratio: 21 / 9;
+		margin-bottom: 2rem;
+		object-fit: cover;
+		border-radius: var(--radius-lg);
+	}
+
+	.article-head {
+		max-width: var(--prose-width);
+		margin: 0 auto 2.5rem;
+		padding-bottom: 1.5rem;
+		border-bottom: 1px solid var(--line);
+		text-align: left;
+	}
+	.article-head h1 {
+		margin-bottom: 0.5em;
+		font-size: 2rem;
+		line-height: 1.3;
+	}
+	.article-desc {
+		margin: 1rem 0 0;
+		color: var(--ink-2);
+		font-size: 0.9375rem;
+		line-height: 1.75;
+	}
+	.updated {
+		color: var(--ink-3);
+	}
+	.tag-list {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+		margin: 1rem 0 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	/* 宽屏：正文 + 右侧粘性目录；窄屏：目录退化为正文上方的静态框 */
+	.article-body {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: 2rem;
+	}
+	.article-aside {
+		order: -1;
+	}
+	@media (min-width: 1200px) {
+		.article-body {
+			grid-template-columns: minmax(0, 1fr) 16rem;
+			gap: 3rem;
+		}
+		.article-aside {
+			order: 0;
+		}
+	}
+
+	/* 正文排版规则见 src/styles/prose.css（与关于页共用，避免两处漂移） */
+
+	/* ═══ 上一篇 / 下一篇 ═══ */
+	.post-nav {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 1rem;
+		max-width: var(--prose-width);
+		margin: 3rem auto 0;
+	}
+	.post-nav-link {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+		padding: 0.9rem 1.1rem;
+		background: var(--surface);
+		border: 1px solid var(--line);
+		border-radius: var(--radius);
+		transition:
+			border-color 0.18s ease,
+			box-shadow 0.18s ease;
+	}
+	.post-nav-link:hover {
+		border-color: var(--accent-line);
+		box-shadow: var(--shadow-sm);
+	}
+	.post-nav-link.next {
+		text-align: right;
+	}
+	.post-nav-label {
+		color: var(--ink-3);
+		font-size: 0.75rem;
+	}
+	.post-nav-title {
+		color: var(--ink);
+		font-family: var(--font-heading);
+		font-size: 0.9375rem;
+		font-weight: 700;
+		line-height: 1.5;
+	}
+	.post-nav-link:hover .post-nav-title {
+		color: var(--accent);
+	}
+	@media (max-width: 640px) {
+		.post-nav {
+			grid-template-columns: minmax(0, 1fr);
+		}
+		.article-head h1 {
+			font-size: 1.625rem;
+		}
+	}
+</style>

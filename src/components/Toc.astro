@@ -1,0 +1,141 @@
+---
+interface Props {
+	headings: { depth: number; slug: string; text: string }[];
+}
+
+const { headings } = Astro.props;
+// 只收 h2/h3：h1 是文章标题本身，h4 及更深层级进目录会让列表失去导航价值
+const items = headings.filter((h) => h.depth === 2 || h.depth === 3);
+---
+
+{
+	items.length > 1 && (
+		<nav class="toc" aria-label="文章目录">
+			<p class="toc-title">目录</p>
+			<ol class="toc-list">
+				{items.map((h) => (
+					<li class:list={["toc-item", `depth-${h.depth}`]}>
+						<a href={`#${h.slug}`} data-toc={h.slug}>
+							{h.text}
+						</a>
+					</li>
+				))}
+			</ol>
+		</nav>
+	)
+}
+
+<script>
+	// 滚动高亮：取「已滚过视口顶部的最后一个标题」作为当前小节。
+	// 用滚动位置而非 IntersectionObserver，是因为后者在长小节与快速滚动下
+	// 容易出现没有任何标题处于相交态、高亮整体消失的情况。
+
+	// offsetTop 只相对最近的定位祖先，需逐级累加换算成文档坐标。
+	const docTop = (el: HTMLElement): number => {
+		let top = 0;
+		let node: HTMLElement | null = el;
+		while (node) {
+			top += node.offsetTop;
+			node = node.offsetParent as HTMLElement | null;
+		}
+		return top;
+	};
+
+	const targets = Array.from(document.querySelectorAll<HTMLAnchorElement>("[data-toc]"))
+		.map((link) => {
+			const el = document.getElementById(link.dataset.toc!);
+			return el ? { link, top: docTop(el) } : null;
+		})
+		.filter((t): t is { link: HTMLAnchorElement; top: number } => t !== null);
+
+	if (targets.length > 0) {
+		let ticking = false;
+
+		const onScroll = () => {
+			if (ticking) return;
+			ticking = true;
+			requestAnimationFrame(() => {
+				// 与正文标题的 scroll-margin-top 保持一致，避开粘性页头
+				const line = window.scrollY + 96;
+				let current = targets[0];
+				for (const t of targets) {
+					if (t.top <= line) current = t;
+				}
+				for (const t of targets) {
+					t.link.classList.toggle("active", t === current);
+				}
+				ticking = false;
+			});
+		};
+
+		// 图片与 Mermaid SVG 加载完成后位置会变，重新量一次
+		addEventListener("load", () => {
+			for (const t of targets) {
+				const el = document.getElementById(t.link.dataset.toc!);
+				if (el) t.top = docTop(el);
+			}
+			onScroll();
+		});
+		addEventListener("scroll", onScroll, { passive: true });
+		onScroll();
+	}
+</script>
+
+<style>
+	.toc {
+		padding: 1rem 1.15rem;
+		background: var(--surface-alt);
+		border: 1px solid var(--line);
+		border-radius: var(--radius);
+	}
+	.toc-title {
+		margin: 0 0 0.6rem;
+		color: var(--ink-3);
+		font-family: var(--font-heading);
+		font-size: 0.8125rem;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+	}
+	.toc-list {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		font-size: 0.875rem;
+		line-height: 1.6;
+	}
+	.toc-item {
+		margin: 0;
+	}
+	.toc-item a {
+		display: block;
+		padding: 0.25rem 0 0.25rem 0.7rem;
+		border-left: 2px solid transparent;
+		color: var(--ink-2);
+		transition:
+			color 0.15s ease,
+			border-color 0.15s ease;
+	}
+	.toc-item a:hover {
+		color: var(--accent);
+	}
+	.toc-item a.active {
+		border-left-color: var(--accent);
+		color: var(--accent);
+		font-weight: 500;
+	}
+	.depth-3 a {
+		padding-left: 1.6rem;
+		font-size: 0.8125rem;
+	}
+
+	/* 宽屏时作为右侧粘性栏，窄屏时退化为正文上方的静态目录框（ADR-0005 单栅原则只约束首页与列表页） */
+	@media (min-width: 1200px) {
+		.toc {
+			position: sticky;
+			top: 5rem;
+			max-height: calc(100vh - 7rem);
+			overflow-y: auto;
+			scrollbar-width: thin;
+		}
+	}
+</style>

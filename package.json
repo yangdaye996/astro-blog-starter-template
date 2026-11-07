@@ -1,25 +1,20 @@
 {
-	"name": "astro-blog-starter-template",
-	"description": "Build a personal website, blog, or portfolio with Astro.",
-	"cloudflare": {
-		"label": "Astro Framework Starter",
-		"products": [
-			"Workers"
-		],
-		"categories": [],
-		"preview_icon_url": "https://imagedelivery.net/wSMYJvS3Xw-n339CbDyDIA/394ca3c9-d351-4036-035a-9f6dfa26dd00/public",
-		"preview_image_url": "https://imagedelivery.net/wSMYJvS3Xw-n339CbDyDIA/f40a6577-eed5-4f3e-cef4-b5ef0a1be100/preview",
-		"publish": true
-	},
+	"name": "cf-blog",
+	"description": "中文个人博客，Astro 纯静态预渲染，部署于 Cloudflare Workers 静态资源托管。",
 	"dependencies": {
 		"@astrojs/cloudflare": "12.6.12",
 		"@astrojs/mdx": "4.3.13",
-		"@astrojs/rss": "4.0.14",
-		"@astrojs/sitemap": "3.6.1",
 		"astro": "5.16.9",
+		"katex": "^0.16.11",
+		"mermaid-isomorphic": "^3.1.0",
+		"rehype-katex": "^7.0.1",
+		"remark-math": "^6.0.0",
 		"typescript": "5.9.3"
 	},
 	"devDependencies": {
+		"@expo-google-fonts/noto-sans-sc": "^0.4.4",
+		"playwright": "^1.49.0",
+		"subset-font": "^2.9.0",
 		"wrangler": "4.136.1"
 	},
 	"engines": {
@@ -30,10 +25,13 @@
 		"astro": "astro",
 		"build": "astro build",
 		"cf-typegen": "wrangler types",
-		"check": "astro build && tsc && wrangler deploy --dry-run",
+		"check": "npm run build && tsc && wrangler deploy --dry-run",
 		"deploy": "wrangler deploy",
 		"dev": "astro dev",
-		"preview": "astro build && wrangler dev"
+		"fonts": "node scripts/subset-heading-font.mjs",
+		"prebuild": "node scripts/subset-heading-font.mjs",
+		"predev": "node scripts/subset-heading-font.mjs",
+		"preview": "npm run build && wrangler dev"
 	},
 	"type": "module"
 }

@@ -1,155 +1,606 @@
-/*
-  The CSS in this style tag is based off of Bear Blog's default CSS.
-  https://github.com/HermanMartinus/bearblog/blob/297026a877bc2ab2b3bdfbd6b9f7961c350917dd/templates/styles/blog/default.css
-  License MIT: https://github.com/HermanMartinus/bearblog/blob/master/LICENSE.md
- */
+/* ═══════════════════════════════════════════════════════════════════
+   设计令牌 —— 浅色单值（ADR-0005：明确不做暗色模式）
+   视觉基调：少数派式清爽卡片，蓝灰主色、高信息密度、细边框轻阴影
+   ═══════════════════════════════════════════════════════════════════ */
 
 :root {
-	--accent: #2337ff;
-	--accent-dark: #000d8a;
-	--black: 15, 18, 25;
-	--gray: 96, 115, 159;
-	--gray-light: 229, 233, 240;
-	--gray-dark: 34, 41, 57;
-	--gray-gradient: rgba(var(--gray-light), 50%), #fff;
-	--box-shadow:
-		0 2px 6px rgba(var(--gray), 25%), 0 8px 24px rgba(var(--gray), 33%),
-		0 16px 32px rgba(var(--gray), 33%);
+	/* 主色：克制的蓝，不与代码块高亮抢注意力 */
+	--accent: #2f6fed;
+	--accent-hover: #1d5bdb;
+	--accent-soft: #eef3fe;
+	--accent-line: #c9dbfb;
+
+	/* 文字三级：正文 / 次级 / 元信息 */
+	--ink: #1f2430;
+	--ink-2: #4b5265;
+	--ink-3: #8b91a3;
+
+	/* 表面与描边 */
+	--bg: #f6f7f9;
+	--surface: #ffffff;
+	--surface-alt: #fafbfc;
+	--line: #e6e8ee;
+	--line-strong: #d6dae3;
+
+	/* 圆角与阴影 */
+	--radius-sm: 6px;
+	--radius: 10px;
+	--radius-lg: 14px;
+	--shadow-sm: 0 1px 2px rgba(31, 36, 48, 0.04);
+	--shadow: 0 1px 2px rgba(31, 36, 48, 0.04), 0 6px 20px rgba(31, 36, 48, 0.05);
+	--shadow-lg: 0 2px 6px rgba(31, 36, 48, 0.06), 0 14px 34px rgba(31, 36, 48, 0.09);
+
+	/* 间距 */
+	--gap: 1rem;
+	--container: 1080px;
+	--prose-width: 46rem;
+
+	/* 字体分工（ADR-0003）：标题层用构建期生成的思源黑体子集，
+	   正文层用中文系统字体栈，零下载。
+	   标题栈保留系统回退，子集缺字时逐字降级而不是整块变样。 */
+	--font-body:
+		-apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB",
+		"Source Han Sans SC", "Noto Sans CJK SC", "Microsoft YaHei", "微软雅黑", system-ui,
+		sans-serif;
+	--font-heading:
+		"Blog Heading", -apple-system, BlinkMacSystemFont, "PingFang SC",
+		"Hiragino Sans GB", "Source Han Sans SC", "Noto Sans CJK SC", "Microsoft YaHei",
+		"微软雅黑", system-ui, sans-serif;
+	--font-mono:
+		ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
+		"Microsoft YaHei Mono", monospace;
 }
+
+/* 标题层子集字体，由 scripts/subset-heading-font.mjs 在 prebuild 阶段生成 */
 @font-face {
-	font-family: "Atkinson";
-	src: url("/fonts/atkinson-regular.woff") format("woff");
-	font-weight: 400;
-	font-style: normal;
-	font-display: swap;
-}
-@font-face {
-	font-family: "Atkinson";
-	src: url("/fonts/atkinson-bold.woff") format("woff");
+	font-family: "Blog Heading";
+	src: url("/fonts/heading-subset.woff2") format("woff2");
 	font-weight: 700;
 	font-style: normal;
 	font-display: swap;
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   基础排版
+   ═══════════════════════════════════════════════════════════════════ */
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+html {
+	-webkit-text-size-adjust: 100%;
+	scroll-behavior: smooth;
+}
+
 body {
-	font-family: "Atkinson", sans-serif;
 	margin: 0;
-	padding: 0;
-	text-align: left;
-	background: linear-gradient(var(--gray-gradient)) no-repeat;
-	background-size: 100% 600px;
-	word-wrap: break-word;
+	background: var(--bg);
+	color: var(--ink-2);
+	font-family: var(--font-body);
+	font-size: 16px;
+	/* 中文正文行高需要比拉丁文更宽，1.75 是长文阅读的舒适区 */
+	line-height: 1.75;
 	overflow-wrap: break-word;
-	color: rgb(var(--gray-dark));
-	font-size: 20px;
-	line-height: 1.7;
+	word-break: break-word;
+	-webkit-font-smoothing: antialiased;
+	text-rendering: optimizeLegibility;
 }
-main {
-	width: 720px;
-	max-width: calc(100% - 2em);
-	margin: auto;
-	padding: 3em 1em;
-}
+
 h1,
 h2,
 h3,
 h4,
 h5,
 h6 {
-	margin: 0 0 0.5rem 0;
-	color: rgb(var(--black));
-	line-height: 1.2;
+	margin: 0 0 0.5em;
+	color: var(--ink);
+	font-family: var(--font-heading);
+	font-weight: 700;
+	/* 中文标题字距略微收紧，避免子集字体在大字号下显得松散 */
+	letter-spacing: 0.01em;
+	line-height: 1.35;
+	text-wrap: balance;
 }
+
 h1 {
-	font-size: 3.052em;
+	font-size: 1.875rem;
 }
 h2 {
-	font-size: 2.441em;
+	font-size: 1.5rem;
 }
 h3 {
-	font-size: 1.953em;
+	font-size: 1.25rem;
 }
 h4 {
-	font-size: 1.563em;
+	font-size: 1.0625rem;
 }
-h5 {
-	font-size: 1.25em;
+h5,
+h6 {
+	font-size: 1rem;
 }
-strong,
-b {
-	font-weight: 700;
+
+p {
+	margin: 0 0 1em;
 }
+
 a {
 	color: var(--accent);
+	text-decoration: none;
+	transition: color 0.15s ease;
 }
 a:hover {
-	color: var(--accent);
+	color: var(--accent-hover);
 }
-p {
-	margin-bottom: 1em;
+
+strong,
+b {
+	color: var(--ink);
+	font-weight: 600;
 }
-.prose p {
-	margin-bottom: 2em;
+
+hr {
+	border: none;
+	border-top: 1px solid var(--line);
+	margin: 2rem 0;
 }
-textarea {
-	width: 100%;
-	font-size: 16px;
-}
-input {
-	font-size: 16px;
-}
-table {
-	width: 100%;
-}
+
 img {
 	max-width: 100%;
 	height: auto;
-	border-radius: 8px;
+	border-radius: var(--radius);
 }
-code {
-	padding: 2px 5px;
-	background-color: rgb(var(--gray-light));
-	border-radius: 2px;
-}
-pre {
-	padding: 1.5em;
-	border-radius: 8px;
-}
-pre > code {
-	all: unset;
-}
+
 blockquote {
-	border-left: 4px solid var(--accent);
-	padding: 0 0 0 20px;
-	margin: 0px;
-	font-size: 1.333em;
+	margin: 1.5em 0;
+	padding: 0.25em 0 0.25em 1.25em;
+	border-left: 3px solid var(--accent-line);
+	color: var(--ink-2);
 }
-hr {
-	border: none;
-	border-top: 1px solid rgb(var(--gray-light));
+blockquote p:last-child {
+	margin-bottom: 0;
 }
+
+:where(ul, ol) {
+	padding-left: 1.5em;
+}
+li {
+	margin-bottom: 0.35em;
+}
+li::marker {
+	color: var(--ink-3);
+}
+
+table {
+	width: 100%;
+	border-collapse: collapse;
+	margin: 1.5em 0;
+	font-size: 0.9375rem;
+}
+th,
+td {
+	padding: 0.6em 0.9em;
+	border: 1px solid var(--line);
+	text-align: left;
+}
+th {
+	background: var(--surface-alt);
+	color: var(--ink);
+	font-weight: 600;
+}
+
+code {
+	padding: 0.15em 0.4em;
+	background: var(--surface-alt);
+	border: 1px solid var(--line);
+	border-radius: var(--radius-sm);
+	font-family: var(--font-mono);
+	font-size: 0.875em;
+	color: var(--ink);
+}
+
+pre {
+	margin: 1.5em 0;
+	padding: 1.1em 1.25em;
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	overflow-x: auto;
+	line-height: 1.6;
+	box-shadow: var(--shadow-sm);
+}
+pre code {
+	all: unset;
+	font-family: var(--font-mono);
+	font-size: 0.875rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   布局骨架
+   ═══════════════════════════════════════════════════════════════════ */
+
+.container {
+	width: 100%;
+	max-width: var(--container);
+	margin-inline: auto;
+	padding-inline: 1.25rem;
+}
+
+/* 归档、随想、关于页用窄栏：这些页面是纯文字纵向流，
+   拉到 1080px 会让每行字数超出中文舒适阅读区间。 */
+.container-narrow {
+	max-width: 46rem;
+}
+
+main {
+	padding-block: 2.5rem 4rem;
+}
+
+.page-head {
+	margin-bottom: 1.75rem;
+	padding-bottom: 1.25rem;
+	border-bottom: 1px solid var(--line);
+}
+.page-head h1 {
+	margin: 0 0 0.35em;
+	font-size: 1.75rem;
+}
+.page-head p {
+	margin: 0;
+	color: var(--ink-3);
+	font-size: 0.9375rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   卡片（首页 / 列表页的唯一布局形态：单栅卡片流，ADR-0005）
+   ═══════════════════════════════════════════════════════════════════ */
+
+.card-stream {
+	display: flex;
+	flex-direction: column;
+	gap: var(--gap);
+}
+
+.post-card {
+	position: relative;
+	display: block;
+	padding: 1.35rem 1.5rem;
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	box-shadow: var(--shadow-sm);
+	transition:
+		border-color 0.18s ease,
+		box-shadow 0.18s ease,
+		transform 0.18s ease;
+}
+/* display:block 会盖掉 UA 的 [hidden]{display:none}，筛选隐藏卡片时必须显式声明 */
+.post-card[hidden] {
+	display: none;
+}
+.post-card:hover {
+	border-color: var(--accent-line);
+	box-shadow: var(--shadow);
+	transform: translateY(-1px);
+}
+.post-card:hover .post-card-title {
+	color: var(--accent);
+}
+
+.post-card-cover {
+	display: block;
+	width: 100%;
+	aspect-ratio: 21 / 9;
+	margin-bottom: 1rem;
+	object-fit: cover;
+	border-radius: var(--radius-sm);
+}
+
+.post-card-title {
+	margin: 0 0 0.4em;
+	color: var(--ink);
+	font-family: var(--font-heading);
+	font-size: 1.25rem;
+	font-weight: 700;
+	line-height: 1.4;
+	transition: color 0.18s ease;
+}
+
+.post-card-desc {
+	display: -webkit-box;
+	margin: 0 0 0.9rem;
+	overflow: hidden;
+	color: var(--ink-2);
+	font-size: 0.9375rem;
+	line-height: 1.7;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+}
+
+/* 元信息行：日期 / 分类 / 标签 / 字数 / 阅读时长 —— 高信息密度是少数派式的核心特征 */
+.meta-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.4rem 0.75rem;
+	color: var(--ink-3);
+	font-size: 0.8125rem;
+	line-height: 1.5;
+}
+.meta-row .sep {
+	color: var(--line-strong);
+}
+
+.badge {
+	display: inline-flex;
+	align-items: center;
+	padding: 0.1em 0.6em;
+	background: var(--accent-soft);
+	border-radius: 999px;
+	color: var(--accent);
+	font-size: 0.75rem;
+	font-weight: 500;
+	line-height: 1.7;
+	white-space: nowrap;
+}
+.badge-plain {
+	background: var(--surface-alt);
+	border: 1px solid var(--line);
+	color: var(--ink-3);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   筛选芯片（ADR-0006：不建聚合路由，只在列表页前端过滤）
+   ═══════════════════════════════════════════════════════════════════ */
+
+.filter-bar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem;
+	margin-bottom: 1.5rem;
+	padding: 0.9rem 1rem;
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+}
+.filter-group {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.4rem;
+}
+.filter-label {
+	margin-right: 0.25rem;
+	color: var(--ink-3);
+	font-size: 0.8125rem;
+}
+.chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3em;
+	padding: 0.25em 0.75em;
+	background: var(--surface-alt);
+	border: 1px solid var(--line);
+	border-radius: 999px;
+	color: var(--ink-2);
+	font-family: var(--font-body);
+	font-size: 0.8125rem;
+	line-height: 1.6;
+	cursor: pointer;
+	transition:
+		background 0.15s ease,
+		border-color 0.15s ease,
+		color 0.15s ease;
+}
+.chip:hover {
+	border-color: var(--accent-line);
+	color: var(--accent);
+}
+/* display:inline-flex 会盖掉 UA 的 [hidden]{display:none}，
+   「清除筛选」按钮靠 hidden 控制显隐，必须显式声明 */
+.chip[hidden] {
+	display: none;
+}
+.chip[aria-pressed="true"] {
+	background: var(--accent);
+	border-color: var(--accent);
+	color: #fff;
+}
+.chip-count {
+	opacity: 0.65;
+	font-size: 0.75rem;
+	font-variant-numeric: tabular-nums;
+}
+.chip-clear {
+	background: none;
+	border-color: transparent;
+	color: var(--ink-3);
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+.filter-empty {
+	padding: 0.25rem 0;
+	color: var(--ink-3);
+	font-size: 0.8125rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   空状态（ADR-0007：模板内容已清空，每个列表页都必须有空状态）
+   ═══════════════════════════════════════════════════════════════════ */
+
+.empty-state {
+	padding: 3.5rem 1.5rem;
+	background: var(--surface);
+	border: 1px dashed var(--line-strong);
+	border-radius: var(--radius);
+	color: var(--ink-3);
+	text-align: center;
+}
+.empty-state strong {
+	display: block;
+	margin-bottom: 0.4em;
+	color: var(--ink-2);
+	font-family: var(--font-heading);
+	font-size: 1.0625rem;
+}
+.empty-state code {
+	font-size: 0.8125rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   时间轴（归档页 / 随想页）
+   ═══════════════════════════════════════════════════════════════════ */
+
+.timeline {
+	position: relative;
+	padding-left: 1.5rem;
+}
+.timeline::before {
+	content: "";
+	position: absolute;
+	inset: 0.5rem 0 0.5rem 4px;
+	width: 1px;
+	background: var(--line);
+}
+.timeline-year {
+	position: relative;
+	margin: 0 0 1rem;
+	color: var(--ink);
+	font-family: var(--font-heading);
+	font-size: 1.25rem;
+	font-weight: 700;
+}
+.timeline-year::before,
+.timeline-item::before {
+	content: "";
+	position: absolute;
+	left: calc(-1.5rem + 1px);
+	top: 0.6em;
+	width: 7px;
+	height: 7px;
+	background: var(--surface);
+	border: 2px solid var(--line-strong);
+	border-radius: 50%;
+}
+.timeline-year::before {
+	border-color: var(--accent);
+}
+.timeline-group {
+	margin-bottom: 2.25rem;
+}
+.timeline-list {
+	display: flex;
+	flex-direction: column;
+	gap: 0.15rem;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.timeline-item {
+	position: relative;
+	display: flex;
+	align-items: baseline;
+	gap: 0.9rem;
+	padding: 0.4rem 0;
+}
+.timeline-date {
+	flex: 0 0 auto;
+	color: var(--ink-3);
+	font-size: 0.8125rem;
+	font-variant-numeric: tabular-nums;
+}
+.timeline-title {
+	color: var(--ink-2);
+	font-size: 0.9375rem;
+	transition: color 0.15s ease;
+}
+.timeline-item:hover .timeline-title {
+	color: var(--accent);
+}
+.timeline-count {
+	color: var(--ink-3);
+	font-size: 0.8125rem;
+	font-weight: 400;
+}
+
+/* 随想：无标题，正文即内容 */
+.note-card {
+	position: relative;
+	margin-bottom: 1rem;
+	padding: 1rem 1.25rem;
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	box-shadow: var(--shadow-sm);
+}
+.note-card .meta-row {
+	margin-bottom: 0.6rem;
+}
+.note-body {
+	margin: 0;
+	color: var(--ink-2);
+	font-size: 0.9375rem;
+}
+.note-body > :last-child {
+	margin-bottom: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   工具类
+   ═══════════════════════════════════════════════════════════════════ */
+
+.sr-only {
+	position: absolute !important;
+	width: 1px;
+	height: 1px;
+	margin: 0;
+	padding: 0;
+	overflow: hidden;
+	border: 0;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
 @media (max-width: 720px) {
 	body {
-		font-size: 18px;
+		font-size: 15px;
 	}
 	main {
-		padding: 1em;
+		padding-block: 1.75rem 3rem;
+	}
+	.container {
+		padding-inline: 1rem;
+	}
+	.post-card {
+		padding: 1.1rem 1.15rem;
+	}
+	.post-card-title {
+		font-size: 1.125rem;
+	}
+	.timeline {
+		padding-left: 1.15rem;
+	}
+	.timeline-year::before,
+	.timeline-item::before {
+		left: calc(-1.15rem + 1px);
+	}
+	.timeline-item {
+		flex-direction: column;
+		gap: 0.15rem;
 	}
 }
 
-.sr-only {
-	border: 0;
-	padding: 0;
-	margin: 0;
-	position: absolute !important;
-	height: 1px;
-	width: 1px;
-	overflow: hidden;
-	/* IE6, IE7 - a 0 height clip, off to the bottom right of the visible 1px box */
-	clip: rect(1px 1px 1px 1px);
-	/* maybe deprecated but we need to support legacy browsers */
-	clip: rect(1px, 1px, 1px, 1px);
-	/* modern browsers, clip-path works inwards from each corner */
-	clip-path: inset(50%);
-	/* added line to stop words getting smushed together (as they go onto separate lines and some screen readers do not understand line feeds as a space */
-	white-space: nowrap;
+@media (prefers-reduced-motion: reduce) {
+	html {
+		scroll-behavior: auto;
+	}
+	*,
+	*::before,
+	*::after {
+		transition-duration: 0.01ms !important;
+		animation-duration: 0.01ms !important;
+	}
 }
