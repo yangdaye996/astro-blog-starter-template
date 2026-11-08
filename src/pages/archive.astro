@@ -3,9 +3,9 @@ import { getCollection } from "astro:content";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import EmptyState from "../components/EmptyState.astro";
 import FormattedDate from "../components/FormattedDate.astro";
-import { sortDescBy, groupByYear } from "../utils/posts";
+import { sortDescBy, groupByYear, resolvePost } from "../utils/posts";
 
-const posts = sortDescBy(await getCollection("blog"), (p) => p.data.pubDate);
+const posts = sortDescBy((await getCollection("blog")).map(resolvePost), (p) => p.data.pubDate);
 const groups = groupByYear(posts, (p) => p.data.pubDate);
 ---
 

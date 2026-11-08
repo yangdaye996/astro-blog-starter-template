@@ -6,7 +6,8 @@
 // 字符来源共三处：
 //   1. src/consts.ts —— 站名/副标题/作者/导航标签（剥离注释后取全部汉字）
 //   2. src/**/*.astro —— 仅 <h1>~<h6> 标签内的汉字（栏目标题、页面标题）
-//   3. src/content/{blog,notes}/** —— frontmatter 的 title 字段
+//   3. src/content/{blog,notes}/** —— frontmatter 的 title 字段；
+//      blog 无 title 时以文件名为标题（ADR-0008），同样纳入扫描
 //
 // 若新增了上述三处之外的标题文案，把它补进 EXTRA_HEADING_CHARS，
 // 否则那些字会在标题字体里缺失并回退到系统字体。
@@ -14,7 +15,7 @@
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { readdir } from "node:fs/promises";
-import { join, dirname, relative } from "node:path";
+import { join, dirname, relative, basename, extname } from "node:path";
 import { fileURLToPath } from "node:url";
 import subsetFont from "subset-font";
 
@@ -109,7 +110,9 @@ async function collectChars() {
 	const titles = [];
 	for (const dir of ["blog", "notes"]) {
 		for await (const f of walk(join(ROOT, "src", "content", dir), [".md", ".mdx"])) {
-			const title = extractFrontmatterTitle(await readFile(f, "utf8"));
+			const title =
+				extractFrontmatterTitle(await readFile(f, "utf8")) ??
+				(dir === "blog" ? basename(f, extname(f)) : null);
 			if (!title) continue;
 			titles.push(title);
 			const found = title.match(CJK_AND_PUNCT) ?? [];

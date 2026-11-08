@@ -1,18 +1,17 @@
 ---
-import type { CollectionEntry } from "astro:content";
 import "katex/dist/katex.min.css";
 import "../styles/prose.css";
 import BaseLayout from "./BaseLayout.astro";
 import Toc from "../components/Toc.astro";
 import CodeCopy from "../components/CodeCopy.astro";
 import FormattedDate from "../components/FormattedDate.astro";
-import { countWords, readingMinutes } from "../utils/posts";
+import { countWords, readingMinutes, type ResolvedPost } from "../utils/posts";
 
 interface Props {
-	post: CollectionEntry<"blog">;
+	post: ResolvedPost;
 	headings: { depth: number; slug: string; text: string }[];
-	prev: CollectionEntry<"blog"> | null;
-	next: CollectionEntry<"blog"> | null;
+	prev: ResolvedPost | null;
+	next: ResolvedPost | null;
 }
 
 const { post, headings, prev, next } = Astro.props;

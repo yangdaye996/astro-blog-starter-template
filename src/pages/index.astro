@@ -3,9 +3,9 @@ import { getCollection } from "astro:content";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import PostList from "../components/PostList.astro";
 import { SITE } from "../consts";
-import { sortDescBy } from "../utils/posts";
+import { sortDescBy, resolvePost } from "../utils/posts";
 
-const posts = sortDescBy(await getCollection("blog"), (p) => p.data.pubDate);
+const posts = sortDescBy((await getCollection("blog")).map(resolvePost), (p) => p.data.pubDate);
 ---
 
 <BaseLayout title={SITE.title} description={SITE.description}>

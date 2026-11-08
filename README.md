@@ -20,15 +20,25 @@
 
 ## 写作
 
+**零格式要求**：把 Markdown 放进对应目录即可，frontmatter 完全可选（ADR-0008）。缺省字段自动推导：
+
+| 字段 | 缺省取值 | frontmatter 覆盖键 |
+| --- | --- | --- |
+| 标题 | 文件名（去掉后缀） | `title` |
+| 日期 | 文件创建时间 | `pubDate`（随想为 `date`） |
+| 摘要 | 正文第一个非空段落，截 120 字 | `description` |
+
+注意：日期取自文件系统，而 git 不保留时间戳——重新 clone 仓库后，未写日期的条目会变成 clone 时间。在意精确日期的条目请写上对应字段。
+
 ### 文章（`src/content/blog/`）
 
-Markdown 或 MDX，文件名即 URL slug。frontmatter：
+Markdown 或 MDX，文件名即 URL slug 与缺省标题。可选 frontmatter：
 
 ```yaml
 ---
-title: 文章标题            # 必填。参与标题字体子集扫描
-description: 一句话摘要     # 必填。卡片副文案与 SEO description
-pubDate: 2026-11-08        # 必填。排序与归档分组依据
+title: 文章标题            # 可选。默认取文件名；参与标题字体子集扫描
+description: 一句话摘要     # 可选。默认取正文首段；卡片副文案与 SEO description
+pubDate: 2026-11-08        # 可选。默认取文件创建时间；排序与归档分组依据
 updatedDate: 2026-11-09    # 可选。显示为「最后更新」
 heroImage: /images/x.png   # 可选。卡片与文章页封面图
 category: 工程             # 可选。仅用于列表页筛选，不生成聚合页
@@ -44,7 +54,7 @@ tags:                      # 可选。仅用于列表页筛选，不生成聚合
 
 ```yaml
 ---
-date: 2026-11-06           # 必填
+date: 2026-11-06           # 可选。默认取文件创建时间
 tags:                      # 可选
   - 随想
 ---
@@ -89,7 +99,7 @@ tags:                      # 可选
 
 `scripts/subset-heading-font.mjs` 在 `prebuild` / `predev` 阶段：
 
-1. 扫描 `src/consts.ts`（剥离注释）、全部 `.astro` 的 `<h1>`–`<h6>` 文本、全部文章 frontmatter 的 `title`；
+1. 扫描 `src/consts.ts`（剥离注释）、全部 `.astro` 的 `<h1>`–`<h6>` 文本、全部文章的标题（frontmatter `title`，缺省为文件名）；
 2. 去重后用 `subset-font`（wasm harfbuzz）从 `@expo-google-fonts/noto-sans-sc` 的 700Bold TTF 裁出子集；
 3. 写入 `public/fonts/heading-subset.woff2`（实测 198 个汉字约 33KB、耗时约 0.2s）。
 
@@ -121,6 +131,7 @@ src/styles/          global.css（设计令牌）与 prose.css（正文排版）
 | `Cloudflare does not support sharp at runtime...` | 本站不使用 `astro:assets` 的图片优化，封面图是普通静态路径，与 image service 无关 |
 | `The collection "blog" does not exist or is empty.` | 内容集合为空时的正常 warning。放入第一篇文章后消失 |
 | `[glob-loader] No files found matching ...` | 同上，内容目录还没有 Markdown |
+| `Automatically externalized node built-in module "node:fs" / "node:path"` | `src/utils/posts.ts` 的元信息推导（ADR-0008）在构建期读文件时间戳；纯静态输出下这些代码不会上传到 Worker |
 
 ## 故障排查
 

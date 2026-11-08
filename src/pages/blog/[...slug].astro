@@ -1,10 +1,10 @@
 ---
-import { type CollectionEntry, getCollection, render } from "astro:content";
+import { getCollection, render } from "astro:content";
 import BlogPost from "../../layouts/BlogPost.astro";
-import { sortDescBy, neighbours } from "../../utils/posts";
+import { sortDescBy, neighbours, resolvePost, type ResolvedPost } from "../../utils/posts";
 
 export async function getStaticPaths() {
-	const posts = await getCollection("blog");
+	const posts = (await getCollection("blog")).map(resolvePost);
 	return posts.map((post) => ({
 		params: { slug: post.id },
 		props: { post },
@@ -12,13 +12,13 @@ export async function getStaticPaths() {
 }
 
 interface Props {
-	post: CollectionEntry<"blog">;
+	post: ResolvedPost;
 }
 
 const { post } = Astro.props;
 const { Content, headings } = await render(post);
 
-const all = sortDescBy(await getCollection("blog"), (p) => p.data.pubDate);
+const all = sortDescBy((await getCollection("blog")).map(resolvePost), (p) => p.data.pubDate);
 const { prev, next } = neighbours(all, post.id);
 ---
 

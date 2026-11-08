@@ -2,9 +2,9 @@
 import { getCollection } from "astro:content";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import PostList from "../../components/PostList.astro";
-import { sortDescBy } from "../../utils/posts";
+import { sortDescBy, resolvePost } from "../../utils/posts";
 
-const posts = sortDescBy(await getCollection("blog"), (p) => p.data.pubDate);
+const posts = sortDescBy((await getCollection("blog")).map(resolvePost), (p) => p.data.pubDate);
 
 // 构建期汇总分类与标签的出现次数，芯片上的计数因此是静态的、无脚本也能看到
 function tally(values: string[]): [string, number][] {

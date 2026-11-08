@@ -1,5 +1,8 @@
-// 构建期工具：字数统计、阅读时长、数学内容探测、上一篇/下一篇。
+// 构建期工具：字数统计、阅读时长、数学内容探测、上一篇/下一篇、元信息推导。
 // 全部在构建时算完并写进 HTML，读者端零 JS（ADR-0001）。
+import { statSync } from "node:fs";
+import { basename, extname } from "node:path";
+import type { CollectionEntry } from "astro:content";
 import { READING_SPEED } from "../consts";
 
 const CJK_RANGE = /[\u3400-\u4dbf\u4e00-\u9fff\u3040-\u30ff\uac00-\ud7af]/g;
@@ -74,4 +77,70 @@ export function groupByYear<T>(
 		else groups.push({ year, entries: [entry] });
 	}
 	return groups;
+}
+
+// ═══ 元信息推导（ADR-0008）═══
+// frontmatter 全可选；缺省时标题取文件名、日期取文件创建时间、摘要取正文首段。
+// schema 层字段虽可选，消费方一律使用下面两个 Resolved 类型，必填约束由推导层保证。
+
+export type ResolvedPost = CollectionEntry<"blog"> & {
+	data: { title: string; description: string; pubDate: Date };
+};
+export type ResolvedNote = CollectionEntry<"notes"> & {
+	data: { date: Date };
+};
+
+// glob loader 保证 filePath 存在（相对项目根目录）
+function fileTitle(entry: CollectionEntry<"blog">): string {
+	const file = entry.filePath!;
+	return basename(file, extname(file));
+}
+
+function fileDate(entry: CollectionEntry<"blog"> | CollectionEntry<"notes">): Date {
+	const stat = statSync(entry.filePath!);
+	// 个别文件系统不支持 birthtime（返回 epoch），退回 mtime
+	return stat.birthtime.getTime() > 0 ? stat.birthtime : stat.mtime;
+}
+
+const EXCERPT_LENGTH = 120;
+
+/** 取正文第一个非空段落做摘要：剥离代码、公式、图片、标题行与标记符号。 */
+function excerpt(body: string): string {
+	const text = body
+		.replace(CODE_FENCE, " ")
+		.replace(/\$\$[\s\S]*?\$\$/g, " ")
+		.replace(/\$[^$\n]*\$/g, " ")
+		.replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
+		.replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
+		.replace(/<[^>]*>/g, " ")
+		.replace(/^#{1,6}\s+.*$/gm, "")
+		.replace(/^\s*[-+*]\s+/gm, "")
+		.replace(/[*_`~>|]/g, "");
+	const para =
+		text
+			.split(/\n\s*\n/)
+			.map((p) => p.replace(/\s+/g, " ").trim())
+			.find((p) => p.length > 0) ?? "";
+	return para.length > EXCERPT_LENGTH ? `${para.slice(0, EXCERPT_LENGTH)}…` : para;
+}
+
+/** 补齐文章缺省的元信息；frontmatter 写了的字段永远优先。 */
+export function resolvePost(post: CollectionEntry<"blog">): ResolvedPost {
+	return {
+		...post,
+		data: {
+			...post.data,
+			title: post.data.title ?? fileTitle(post),
+			pubDate: post.data.pubDate ?? fileDate(post),
+			description: post.data.description ?? excerpt(post.body ?? ""),
+		},
+	};
+}
+
+/** 补齐随想缺省的日期；frontmatter 的 date 优先。 */
+export function resolveNote(note: CollectionEntry<"notes">): ResolvedNote {
+	return {
+		...note,
+		data: { ...note.data, date: note.data.date ?? fileDate(note) },
+	};
 }
