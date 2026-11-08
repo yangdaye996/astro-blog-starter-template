@@ -20,6 +20,8 @@
 
 ## 写作
 
+**发布即 push**：提交推送到 GitHub 会自动触发 Cloudflare 构建部署；本机 `npm run deploy` 是手动备选。
+
 **零格式要求**：把 Markdown 放进对应目录即可，frontmatter 完全可选（ADR-0008）。缺省字段自动推导：
 
 | 字段 | 缺省取值 | frontmatter 覆盖键 |
