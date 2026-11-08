@@ -1,6 +1,8 @@
 # 中文个人博客
 
-运行在 Cloudflare Workers 上的中文个人博客。Astro **纯静态预渲染**，Workers 只负责伺服 `dist/` 里的静态文件，不执行服务端代码，因此不消耗 Worker 的 CPU / 内存配额。
+运行在 Cloudflare Workers 上的中文个人博客。Astro **server 输出**按请求从 Cloudflare D1 取数渲染，写作、修改全部在站内编辑器 `/admin` 完成，**保存即时生效**，不经过构建。
+
+重计算（Mermaid→SVG、KaTeX 公式、Shiki 代码高亮、字数/摘要推导）在**编辑器保存时**完成，D1 里存的是成品 HTML + 元数据——Worker 请求路径只做取数拼装，读者端依旧零 JS。这是 ADR-0009 对原「纯静态预渲染」（ADR-0001）的演进：构建期管线的原则不变，执行位置从构建机搬到编辑器。
 
 视觉基调为少数派式清爽卡片：蓝灰主色、单栅卡片流、高信息密度元信息、纯浅色（不做暗色模式）。
 
@@ -10,138 +12,91 @@
 
 | 命令 | 作用 |
 | --- | --- |
-| `npm install` | 安装依赖。首次安装较重：含 Playwright（构建期渲染 Mermaid 需要 Chromium）与思源黑体源字体 |
-| `npx playwright install chromium` | 仅首次需要：下载构建期渲染 Mermaid 用的浏览器二进制 |
-| `npm run dev` | 本地开发服务器。会先自动生成标题字体子集 |
-| `npm run build` | 构建到 `dist/`。会先自动生成标题字体子集 |
-| `npm run check` | 构建 + `tsc` 类型检查 + `wrangler deploy --dry-run` |
-| `npm run deploy` | 部署到 Cloudflare Workers |
-| `npm run fonts` | 单独重新生成标题字体子集 |
+| `npm run dev` | 本地开发服务器（本地 D1，数据在 `.wrangler/state/`，与远端无关） |
+| `npm run build` | 构建（SSR 产物 + 静态资产到 `dist/`） |
+| `npm run check` | **验证命令**：build + `tsc` + `wrangler deploy --dry-run`，改完代码跑这个 |
+| `npm run import` | 把 `src/content/{blog,notes}` 的 Markdown 导入本地 D1（迁移工具；`--replace` 先清空，源为空时会拒绝执行） |
+| `npm run export` | 把 D1 内容导出为 Markdown 到 `content-export/`（备份逃生舱） |
+| `npm run deploy` | 手动部署；正常部署是 push 到 GitHub 自动触发 Cloudflare 构建 |
+| `npx wrangler d1 migrations apply blog --local` | 应用 D1 迁移到本地库（`--remote` 为远端） |
+
+首次环境：`npm install`（较重：含 Playwright，导入脚本渲染 Mermaid 需要）。Node >= 22。
 
 ## 写作
 
-**发布即 push**：提交推送到 GitHub 会自动触发 Cloudflare 构建部署；本机 `npm run deploy` 是手动备选。
+**在编辑器里写**：`/admin` 即可新建/编辑文章与随想、发布、存草稿、改站点设置。正文支持代码块（保存时 Shiki 高亮）、Mermaid（保存时渲染成内联 SVG）、数学公式（KaTeX）、自动目录（h2/h3）。
 
-**零格式要求**：把 Markdown 放进对应目录即可，frontmatter 完全可选（ADR-0008）。缺省字段自动推导：
-
-| 字段 | 缺省取值 | frontmatter 覆盖键 |
-| --- | --- | --- |
-| 标题 | 文件名（去掉后缀） | `title` |
-| 日期 | 文件创建时间 | `pubDate`（随想为 `date`） |
-| 摘要 | 正文第一个非空段落，截 120 字 | `description` |
-
-注意：日期取自文件系统，而 git 不保留时间戳——重新 clone 仓库后，未写日期的条目会变成 clone 时间。在意精确日期的条目请写上对应字段。
-
-### 文章（`src/content/blog/`）
-
-Markdown 或 MDX，文件名即 URL slug 与缺省标题。可选 frontmatter：
-
-```yaml
----
-title: 文章标题            # 可选。默认取文件名；参与标题字体子集扫描
-description: 一句话摘要     # 可选。默认取正文首段；卡片副文案与 SEO description
-pubDate: 2026-11-08        # 可选。默认取文件创建时间；排序与归档分组依据
-updatedDate: 2026-11-09    # 可选。显示为「最后更新」
-heroImage: /images/x.png   # 可选。卡片与文章页封面图
-category: 工程             # 可选。仅用于列表页筛选，不生成聚合页
-tags:                      # 可选。仅用于列表页筛选，不生成聚合页
-  - Cloudflare
-  - 构建
----
-```
-
-### 随想（`src/content/notes/`）
-
-无标题的短记录，渲染到 `/notes` 的时间轴上，不生成独立页面：
-
-```yaml
----
-date: 2026-11-06           # 可选。默认取文件创建时间
-tags:                      # 可选
-  - 随想
----
-
-正文即内容。
-```
-
-### 正文能力
-
-- **代码块**：Shiki 浅色高亮，鼠标悬停出现复制按钮。
-- **Mermaid**：```` ```mermaid ```` 代码块在**构建期**渲染成内联 SVG，读者端零 JS。语法错误不会中断构建，该图会退化为代码块并在构建日志报错。
-- **数学公式**：`$...$` 与 `$$...$$`，构建期由 KaTeX 渲染。
-- **目录**：自动收录 h2 / h3，宽屏为右侧粘性栏并随滚动高亮。
+- **草稿**：`status` 字段区分草稿/已发布，草稿仅编辑器可见（ADR-0009 开启）。
+- **即时生效**：保存写 D1，读者端下一次请求即是新内容，无构建延迟。
+- **术语**以 [`docs/glossary.md`](docs/glossary.md) 为准：文章（posts 表）/ 随想（notes 表）/ 卡片 / 筛选芯片 / 徽标。
 
 ## 页面
 
 | 路由 | 内容 |
 | --- | --- |
 | `/` | 首页，单栅卡片流 |
-| `/blog` | 文章列表，顶部带分类 / 标签筛选芯片，筛选状态写入 URL 查询参数 |
-| `/blog/<slug>` | 文章详情，含封面、目录、字数与阅读时长、上一篇 / 下一篇 |
+| `/blog` | 文章列表，分类/标签筛选芯片，筛选状态写入 URL 查询参数 |
+| `/blog/<slug>` | 文章详情（封面、目录、字数与阅读时长、上一篇/下一篇） |
 | `/notes` | 随想时间轴 |
 | `/archive` | 按年份分组的归档时间轴 |
-| `/about` | 关于页 |
+| `/about` | 关于页（正文在编辑器「站点设置」里写） |
+| `/admin` | 编辑器（生产环境由 Cloudflare Access 保护） |
 
-没有分类页、标签页、友链页、项目页，没有 RSS 与 sitemap，没有暗色模式。这些是明确的设计取舍，理由见对应 ADR。
+没有分类页/标签页聚合路由、RSS、sitemap、评论、站内搜索、暗色模式——仍是明确的设计取舍（ADR-0005/0006/0007）。
+
+## 首次部署
+
+1. `npx wrangler login`
+2. `npx wrangler d1 create blog`，把输出的 `database_id` 填进 `wrangler.json`（当前是占位 UUID）
+3. `npx wrangler d1 migrations apply blog --remote`（建表）
+4. 内容：本地已导入的数据不会自动上远端。两种选择：
+   - 部署后在 `/admin` 里逐篇发布（适合起步）；
+   - 或用 `npm run export` 导出 Markdown，再经 Cloudflare 控制台的 D1 控制台导入。
+   （`import` 脚本目前只支持 `--local`，远端批量导入是已知待办。）
+5. **配置 Cloudflare Access**（必须，否则编辑器裸奔）：Zero Trust 控制台 → Access → Applications → Self-hosted，域名 `<你的域名>`，路径 `/admin*`，策略允许自己的邮箱（Email OTP）。
+6. push 到 GitHub 触发 Cloudflare 构建，或 `npm run deploy`。
 
 ## 站点配置
 
-**全部身份信息集中在 [`src/consts.ts`](src/consts.ts) 顶部的 `SITE` 常量块**：站名、副标题、作者昵称、正式域名、社交链接。改这一处即可全站生效。
+身份信息（站名、副标题、作者、域名、社交链接、关于页正文）的**真源在 D1 settings 表**，编辑器「站点设置」页可改，即时生效。[`src/consts.ts`](src/consts.ts) 的 `SITE` 常量块退化为缺省值（表里缺键时回退），`NAV` 导航结构与阅读速度常量留在代码。
 
-注意两点：
+## 字体
 
-1. 改**站名或导航文案**后必须重新构建——标题字体子集在 `prebuild` 阶段扫描这些文字。
-2. 填入正式域名前，canonical 与 OpenGraph 指向 `https://example.com`，不要提前对外发布。
+标题层用思源黑体 Bold 的 **unicode-range 分片**（fontsource 现成分片，`@fontsource/noto-sans-sc`），浏览器只为命中的字形下载分片，运行时标题无需扫描子集（ADR-0003 方案随 ADR-0009 演进）。正文层用中文系统字体栈，零下载。
 
-社交链接保持 `null` 的条目不会渲染；填上 URL 即自动出现在页头、页脚与关于页。
+## 备份与逃生舱
 
-## 标题字体子集
-
-标题层（站名、导航、栏目标题、文章标题）使用思源黑体 Bold 的**动态子集**，正文层使用中文系统字体栈，零下载。
-
-`scripts/subset-heading-font.mjs` 在 `prebuild` / `predev` 阶段：
-
-1. 扫描 `src/consts.ts`（剥离注释）、全部 `.astro` 的 `<h1>`–`<h6>` 文本、全部文章的标题（frontmatter `title`，缺省为文件名）；
-2. 去重后用 `subset-font`（wasm harfbuzz）从 `@expo-google-fonts/noto-sans-sc` 的 700Bold TTF 裁出子集；
-3. 写入 `public/fonts/heading-subset.woff2`（实测 198 个汉字约 33KB、耗时约 0.2s）。
-
-产物已 gitignore。若新增了上述三处之外的标题文案，把字符补进脚本顶部的 `EXTRA_HEADING_CHARS`，否则那些字会回退到系统字体。
+- `npm run export`：全部内容倒回 Markdown（含 frontmatter），可进任何 Markdown 工作流（含 Obsidian）。
+- 远端 D1 自带 Time Travel（30 天时点恢复）。
+- 内容与代码彻底解耦：改文章不触发构建，push 只在改代码时发生。
 
 ## 项目结构
 
 ```
-docs/adr/            架构决策记录
-docs/glossary.md     领域术语表
-markdown.config.mjs  Markdown / MDX 共用的插件与高亮配置
-remark-mermaid.mjs   构建期 Mermaid 渲染插件（必须在 remark 阶段，原因见 ADR-0004）
-scripts/             构建期工具（字体子集）
-src/consts.ts        站点身份与导航的唯一配置点
-src/content/         blog 与 notes 两个内容集合
-src/utils/posts.ts   字数、阅读时长、排序、分组等构建期计算
-src/styles/          global.css（设计令牌）与 prose.css（正文排版）
+docs/adr/             架构决策记录（9 条）
+docs/glossary.md      领域术语表
+migrations/           D1 迁移（建表）
+src/lib/              text（纯文本计算）/ render-markdown（保存时渲染管线）/ db（D1 数据层）
+                      settings（站点身份读取）/ editor-client（编辑器逻辑）/ api-helpers
+src/pages/admin/      编辑器页面与 API 路由
+src/utils/timeline.ts 时间轴工具（倒序/按年分组）
+scripts/              import-content.ts（迁移导入）/ export-content.ts（导出）
+src/consts.ts         站点身份缺省值 + 导航 + 阅读速度
+src/styles/           global.css（设计令牌）/ prose.css（正文排版）/ admin.css（编辑器）
 ```
-
-## 构建期依赖说明
-
-`playwright`、`mermaid-isomorphic`、`subset-font`、`@expo-google-fonts/noto-sans-sc` 都只服务于构建期，**不进入 `dist/`、不上传到 Worker**。`wrangler deploy --dry-run` 可确认产物绑定仅 `env.ASSETS`。
 
 ## 已知构建提示（均为预期，可忽略）
 
 | 提示 | 原因 |
 | --- | --- |
-| `Enabling sessions with Cloudflare KV with the "SESSION" KV binding.` | `@astrojs/cloudflare` 的固定提示。纯静态输出下不会真的接线：`wrangler deploy --dry-run` 显示绑定只有 `env.ASSETS`。不需要创建 KV 命名空间 |
-| `Cloudflare does not support sharp at runtime...` | 本站不使用 `astro:assets` 的图片优化，封面图是普通静态路径，与 image service 无关 |
-| `The collection "blog" does not exist or is empty.` | 内容集合为空时的正常 warning。放入第一篇文章后消失 |
-| `[glob-loader] No files found matching ...` | 同上，内容目录还没有 Markdown |
-| `Automatically externalized node built-in module "node:fs" / "node:path"` | `src/utils/posts.ts` 的元信息推导（ADR-0008）在构建期读文件时间戳；纯静态输出下这些代码不会上传到 Worker |
+| `Enabling sessions with Cloudflare KV with the "SESSION" KV binding.` | `@astrojs/cloudflare` 固定提示，未使用 sessions |
+| `Cloudflare does not support sharp at runtime...` | 不使用 astro:assets 图片优化 |
+| `Some chunks are larger than 500 kB...` | 编辑器保存管线的 shiki/mermaid 分包，仅 /admin 加载，读者端不受影响 |
 
 ## 故障排查
 
-**删了文章但站点还显示它**：Astro 内容层的持久化数据存储在 `node_modules/.astro/data-store.json`，不在 `.astro/` 里，个别情况下删除源文件不会让它失效。执行：
+**本地库想重来**：`rm -rf .wrangler/state && npx wrangler d1 migrations apply blog --local && npm run import -- --replace`。
 
-```bash
-rm -rf node_modules/.astro dist && npm run build
-```
+**编辑器保存报 slug 冲突**：slug 全局唯一，换一个即可（409 由 API 明确返回）。
 
-**标题里某个汉字显示成了别的字体**：该字不在子集里。重新构建；若它是写在 `.astro` 的 h1–h6 之外或 `consts.ts` 之外的标题文案，把字符补进 `scripts/subset-heading-font.mjs` 顶部的 `EXTRA_HEADING_CHARS`。
-
+**页面数据没更新**：SSR 每请求直读 D1，无缓存层——刷新即变。若远端没变，检查是否连错了库（`--local` vs `--remote`）。

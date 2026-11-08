@@ -1,0 +1,122 @@
+---
+// 文章/随想共用的编辑表单（ADR-0009）。
+// 字段按 mode 裁剪；初始数据经 #editor-initial 的 JSON 块传给客户端脚本，
+// 客户端逻辑全部在 src/lib/editor-client.ts（预览、保存时渲染、提交）。
+
+interface Props {
+	mode: "post" | "note";
+	heading: string;
+	initial?: Record<string, unknown> | null;
+}
+
+const { mode, heading, initial = null } = Astro.props;
+const isPost = mode === "post";
+const dataJson = JSON.stringify(initial ?? { mode });
+const dataAttr = JSON.stringify({ mode });
+---
+
+<h1 class="page-head-title">{heading}</h1>
+
+<div class="panel" id="editor" data-editor={dataAttr}>
+	{
+		isPost && (
+			<div class="field-grid">
+				<div class="field field-wide">
+					<label for="f-title">标题</label>
+					<input id="f-title" type="text" placeholder="文章标题" />
+				</div>
+				<div class="field">
+					<label for="f-slug">slug（URL 路径，可留空跟随标题）</label>
+					<input id="f-slug" type="text" placeholder="url-path" />
+				</div>
+				<div class="field">
+					<label for="f-category">分类（可选）</label>
+					<input id="f-category" type="text" placeholder="如：工程" />
+				</div>
+				<div class="field">
+					<label for="f-tags">标签（逗号或空格分隔）</label>
+					<input id="f-tags" type="text" placeholder="Cloudflare, 构建" />
+				</div>
+				<div class="field">
+					<label for="f-pubdate">发布日期（留空 = 保存时刻）</label>
+					<input id="f-pubdate" type="date" />
+				</div>
+				<div class="field field-wide">
+					<label for="f-hero">封面图路径（可选，如 /images/cover.png）</label>
+					<input id="f-hero" type="text" placeholder="/images/cover.png" />
+				</div>
+				<div class="field field-wide">
+					<label for="f-description">摘要（可选，留空自动取正文首段）</label>
+					<textarea id="f-description" rows="2" />
+					<p class="status-line" id="desc-hint" />
+				</div>
+			</div>
+		)
+	}
+	{
+		!isPost && (
+			<div class="field-grid">
+				<div class="field">
+					<label for="f-tags">标签（逗号或空格分隔）</label>
+					<input id="f-tags" type="text" placeholder="随想" />
+				</div>
+				<div class="field">
+					<label for="f-date">日期（留空 = 保存时刻）</label>
+					<input id="f-date" type="date" />
+				</div>
+			</div>
+		)
+	}
+
+	<div class="field" style="margin-bottom: 0.85rem;">
+		<label for="f-status">状态</label>
+		<select id="f-status">
+			<option value="draft">草稿（仅编辑器可见）</option>
+			<option value="published">已发布（站点可见）</option>
+		</select>
+	</div>
+
+	<div class="editor-split">
+		<div class="field">
+			<label for="f-markdown">正文（Markdown，支持代码块 / Mermaid / 数学公式）</label>
+			<textarea id="f-markdown" class="markdown-input" placeholder="# 标题&#10;&#10;正文…"></textarea>
+		</div>
+		<div>
+			<label class="preview-label">预览（保存时以此渲染结果落库）</label>
+			<div class="preview-pane prose" id="preview" />
+		</div>
+	</div>
+
+	<div class="editor-actions">
+		<button type="button" class="btn btn-primary" id="btn-save">保存</button>
+		<button type="button" class="btn btn-danger" id="btn-delete" hidden>删除</button>
+	</div>
+	<p class="status-line" id="status-line" />
+
+	<script type="application/json" id="editor-initial" set:html={dataJson} />
+</div>
+
+<script>
+	import { initEditor } from "../../lib/editor-client";
+
+	const root = document.getElementById("editor");
+	const dataEl = document.getElementById("editor-initial");
+	if (root && dataEl) {
+		const initial = JSON.parse(dataEl.textContent ?? "{}") as Parameters<typeof initEditor>[1];
+		initEditor(root, initial);
+	}
+</script>
+
+<style>
+	.page-head-title {
+		font-size: 1.375rem;
+		color: var(--ink);
+		margin: 0 0 1.25rem;
+	}
+	.preview-label {
+		display: block;
+		color: var(--ink-3);
+		font-size: 0.8125rem;
+		margin-bottom: 0.3rem;
+	}
+</style>

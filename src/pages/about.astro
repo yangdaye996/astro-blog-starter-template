@@ -2,37 +2,37 @@
 import "../styles/prose.css";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import SocialLinks from "../components/SocialLinks.astro";
-import { SITE } from "../consts";
+import EmptyState from "../components/EmptyState.astro";
+import { getSiteSettings } from "../lib/settings";
+
+const settings = await getSiteSettings(Astro.locals);
 ---
 
-<BaseLayout title="关于" description={`关于 ${SITE.author} 与 ${SITE.title}。`}>
+<BaseLayout settings={settings} title="关于" description={`关于 ${settings.author} 与 ${settings.title}。`}>
 	<div class="container container-narrow">
 		<header class="page-head">
 			<h1>关于</h1>
-			<p>{SITE.author}</p>
+			<p>{settings.author}</p>
 		</header>
 
-		<div class="prose">
-			<!-- ↓↓↓ 占位正文，改成你自己的介绍即可。这里的汉字不进标题字体子集，
-			     因为它以正文层的系统字体渲染（ADR-0003）。 -->
-			<p>
-				这里是关于页的占位内容。你可以写清楚自己是谁、在做什么、这个站点用来记录什么，
-				以及别人可以通过什么方式找到你。
-			</p>
-
-			<h2 id="about-site">关于本站</h2>
-			<p>
-				本站由 Astro 在构建期生成纯静态页面，托管在 Cloudflare Workers 的静态资源上，
-				不包含服务端渲染、评论系统与访问统计。文章以 Markdown 写在仓库里，
-				随代码一起版本管理。
-			</p>
-
-			<h2 id="about-contact">联系方式</h2>
-			<SocialLinks />
-			<p>
-				社交链接在 <code>src/consts.ts</code> 里配置，填上地址就会自动出现在页头、页脚与这里；
-				留空则整块不渲染。
-			</p>
-		</div>
+		{
+			settings.aboutHtml ? (
+				<div class="prose">
+					{/* 编辑器「站点设置」里保存的成品 HTML（保存时渲染，ADR-0009） */}
+					<div set:html={settings.aboutHtml} />
+					<h2 id="about-contact">联系方式</h2>
+					<SocialLinks social={settings.social} />
+				</div>
+			) : (
+				<div class="prose">
+					<EmptyState
+						title="关于页还没有内容"
+						hint="到 /admin 的「站点设置」里写一段关于页正文，保存后立即生效。"
+					/>
+					<h2 id="about-contact">联系方式</h2>
+					<SocialLinks social={settings.social} />
+				</div>
+			)
+		}
 	</div>
 </BaseLayout>

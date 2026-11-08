@@ -20,6 +20,12 @@
 	margin-bottom: 1.25em;
 }
 
+/* 代码块长行换行而不是横向滚动（旧构建 Shiki wrap:true 的行为，ADR-0004/0009） */
+.prose pre {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
 .prose h2,
 .prose h3,
 .prose h4 {

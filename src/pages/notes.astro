@@ -1,24 +1,17 @@
 ---
-import { getCollection, render } from "astro:content";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import EmptyState from "../components/EmptyState.astro";
 import FormattedDate from "../components/FormattedDate.astro";
-import { sortDescBy, groupByYear, resolveNote } from "../utils/posts";
+import { getSiteSettings } from "../lib/settings";
+import { listNotes, type Note } from "../lib/db";
+import { groupByYear } from "../utils/timeline";
 
-const notes = sortDescBy((await getCollection("notes")).map(resolveNote), (n) => n.data.date);
-
-// 随想无标题，正文即内容，逐条渲染成 HTML 后交给时间轴
-const rendered = await Promise.all(
-	notes.map(async (note) => {
-		const { Content } = await render(note);
-		return { note, Content };
-	}),
-);
-
-const groups = groupByYear(rendered, (r) => r.note.data.date);
+const settings = await getSiteSettings(Astro.locals);
+const notes = await listNotes(Astro.locals.runtime!.env.DB, "published");
+const groups = groupByYear(notes, (n) => n.date);
 ---
 
-<BaseLayout title="随想" description={`共 ${notes.length} 条随想，按时间倒序排列。`}>
+<BaseLayout settings={settings} title="随想" description={`共 ${notes.length} 条随想，按时间倒序排列。`}>
 	<div class="container container-narrow">
 		<header class="page-head">
 			<h1>随想</h1>
@@ -26,22 +19,22 @@ const groups = groupByYear(rendered, (r) => r.note.data.date);
 		</header>
 
 		{
-			rendered.length > 0 ? (
+			notes.length > 0 ? (
 				<div class="timeline">
 					{groups.map((group) => (
 						<section class="timeline-group">
 							<h2 class="timeline-year">
 								{group.year} 年<span class="timeline-count">{group.entries.length} 条</span>
 							</h2>
-							{group.entries.map(({ note, Content }) => (
+							{group.entries.map((note: Note) => (
 								<article class="note-card">
 									<div class="meta-row">
-										<FormattedDate date={note.data.date} />
-										{note.data.tags.length > 0 && (
+										<FormattedDate date={note.date} />
+										{note.tags.length > 0 && (
 											<>
 												<span class="sep" aria-hidden="true">·</span>
 												<ul class="tag-list">
-													{note.data.tags.map((tag) => (
+													{note.tags.map((tag) => (
 														<li>
 															<span class="badge badge-plain">#{tag}</span>
 														</li>
@@ -50,9 +43,8 @@ const groups = groupByYear(rendered, (r) => r.note.data.date);
 											</>
 										)}
 									</div>
-									<div class="note-body">
-										<Content />
-									</div>
+									{/* 正文是保存时渲染好的成品 HTML（ADR-0009） */}
+									<div class="note-body prose" set:html={note.html} />
 								</article>
 							))}
 						</section>
@@ -61,7 +53,7 @@ const groups = groupByYear(rendered, (r) => r.note.data.date);
 			) : (
 				<EmptyState
 					title="还没有随想"
-					hint="把短文放进 src/content/notes/ 即可，无需任何 frontmatter。"
+					hint="到 /admin 写一条随想，保存发布后会出现在这条时间轴上。"
 				/>
 			)
 		}

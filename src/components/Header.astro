@@ -1,17 +1,24 @@
 ---
 import HeaderLink from "./HeaderLink.astro";
 import SocialLinks from "./SocialLinks.astro";
-import { SITE, NAV } from "../consts";
+import { NAV } from "../consts";
+import type { SiteSettings } from "../lib/settings";
+
+interface Props {
+	settings: SiteSettings;
+}
+
+const { settings } = Astro.props;
 ---
 
 <header class="site-header">
 	<div class="container header-inner">
-		<a class="site-title" href="/" rel="home">{SITE.title}</a>
+		<a class="site-title" href="/" rel="home">{settings.title}</a>
 		<nav class="site-nav" aria-label="主导航">
 			{NAV.map((item) => <HeaderLink href={item.href}>{item.label}</HeaderLink>)}
 		</nav>
 		<div class="header-social">
-			<SocialLinks />
+			<SocialLinks social={settings.social} />
 		</div>
 	</div>
 </header>

@@ -35,29 +35,22 @@
 	--container: 1080px;
 	--prose-width: 46rem;
 
-	/* 字体分工（ADR-0003）：标题层用构建期生成的思源黑体子集，
+	/* 字体分工（ADR-0003 / ADR-0009）：标题层用思源黑体 Bold 的 unicode-range
+	   分片（fontsource 现成分片，BaseHead.astro 里 import 700.css），
+	   浏览器只为命中的字形下载分片，运行时标题无需扫描子集。
 	   正文层用中文系统字体栈，零下载。
-	   标题栈保留系统回退，子集缺字时逐字降级而不是整块变样。 */
+	   标题栈保留系统回退，分片未就绪时逐字降级而不是整块变样。 */
 	--font-body:
 		-apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB",
 		"Source Han Sans SC", "Noto Sans CJK SC", "Microsoft YaHei", "微软雅黑", system-ui,
 		sans-serif;
 	--font-heading:
-		"Blog Heading", -apple-system, BlinkMacSystemFont, "PingFang SC",
+		"Noto Sans SC", -apple-system, BlinkMacSystemFont, "PingFang SC",
 		"Hiragino Sans GB", "Source Han Sans SC", "Noto Sans CJK SC", "Microsoft YaHei",
 		"微软雅黑", system-ui, sans-serif;
 	--font-mono:
 		ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
 		"Microsoft YaHei Mono", monospace;
-}
-
-/* 标题层子集字体，由 scripts/subset-heading-font.mjs 在 prebuild 阶段生成 */
-@font-face {
-	font-family: "Blog Heading";
-	src: url("/fonts/heading-subset.woff2") format("woff2");
-	font-weight: 700;
-	font-style: normal;
-	font-display: swap;
 }
 
 /* ═══════════════════════════════════════════════════════════════════

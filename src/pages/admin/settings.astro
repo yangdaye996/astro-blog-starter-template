@@ -1,0 +1,187 @@
+---
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import { getSettingRows } from "../../lib/db";
+import { getSiteSettings, SETTING_KEYS, DEFAULT_ABOUT_MARKDOWN } from "../../lib/settings";
+
+const db = Astro.locals.runtime!.env.DB;
+const [settings, rows] = await Promise.all([getSiteSettings(Astro.locals), getSettingRows(db)]);
+
+const aboutMarkdown = rows[SETTING_KEYS.aboutMarkdown] ?? DEFAULT_ABOUT_MARKDOWN;
+
+// 表单初始值经 JSON 块传给客户端脚本
+const initial = {
+	title: settings.title,
+	description: settings.description,
+	author: settings.author,
+	url: settings.url,
+	github: settings.social.github ?? "",
+	zhihu: settings.social.zhihu ?? "",
+	bilibili: settings.social.bilibili ?? "",
+	email: settings.social.email ?? "",
+	aboutMarkdown,
+};
+---
+
+<AdminLayout title="站点设置" current="settings">
+	<h1 class="page-title">站点设置</h1>
+
+	<div class="panel" id="settings-panel">
+		<div class="field-grid">
+			<div class="field">
+				<label for="s-title">站名</label>
+				<input id="s-title" type="text" />
+			</div>
+			<div class="field">
+				<label for="s-author">作者昵称</label>
+				<input id="s-author" type="text" />
+			</div>
+			<div class="field field-wide">
+				<label for="s-description">副标题（首页简介 + 默认 SEO description）</label>
+				<input id="s-description" type="text" />
+			</div>
+			<div class="field field-wide">
+				<label for="s-url">正式域名（带协议、不带结尾斜杠）</label>
+				<input id="s-url" type="text" placeholder="https://example.com" />
+			</div>
+		</div>
+
+		<div class="field-grid">
+			<div class="field">
+				<label for="s-github">GitHub（留空不显示）</label>
+				<input id="s-github" type="text" placeholder="https://github.com/..." />
+			</div>
+			<div class="field">
+				<label for="s-zhihu">知乎</label>
+				<input id="s-zhihu" type="text" />
+			</div>
+			<div class="field">
+				<label for="s-bilibili">B 站</label>
+				<input id="s-bilibili" type="text" />
+			</div>
+			<div class="field">
+				<label for="s-email">邮箱</label>
+				<input id="s-email" type="text" />
+			</div>
+		</div>
+
+		<div class="editor-split" style="margin-top: 0.85rem;">
+			<div class="field">
+				<label for="s-about">关于页正文（Markdown）</label>
+				<textarea id="s-about" class="markdown-input" style="min-height: 40vh;" />
+			</div>
+			<div>
+				<label class="preview-label">关于页预览</label>
+				<div class="preview-pane prose" id="about-preview" />
+			</div>
+		</div>
+
+		<div class="editor-actions">
+			<button type="button" class="btn btn-primary" id="btn-save-settings">保存设置</button>
+		</div>
+		<p class="status-line" id="settings-status" />
+	</div>
+
+	<script type="application/json" id="settings-initial" set:html={JSON.stringify(initial)} />
+</AdminLayout>
+
+<script>
+	import { renderMarkdown } from "../../lib/render-markdown";
+	import { SETTING_KEYS } from "../../lib/settings";
+	import type { MermaidRenderer } from "../../lib/render-markdown";
+
+	// 站点设置页通常没有 mermaid 块；万一有，退化为代码块即可（不再拉 1MB 的 mermaid）
+	const noopMermaid: MermaidRenderer = async () => null;
+
+	const panel = document.getElementById("settings-panel");
+	const dataEl = document.getElementById("settings-initial");
+	const statusEl = document.getElementById("settings-status") as HTMLParagraphElement | null;
+	const previewEl = document.getElementById("about-preview") as HTMLDivElement | null;
+
+	if (panel && dataEl) {
+		const initial = JSON.parse(dataEl.textContent ?? "{}") as Record<string, string>;
+		const value = (id: string) =>
+			(document.getElementById(id) as HTMLInputElement | HTMLTextAreaElement | null)?.value ?? "";
+
+		// 预填
+		for (const [key, val] of Object.entries(initial)) {
+			const input = document.getElementById(`s-${key.replace(/[A-Z]/g, (c) => c.toLowerCase())}`);
+			if (input) (input as HTMLInputElement | HTMLTextAreaElement).value = val;
+		}
+
+		// 关于页预览（防抖）
+		const aboutEl = document.getElementById("s-about") as HTMLTextAreaElement | null;
+		let timer: ReturnType<typeof setTimeout> | null = null;
+		const renderAbout = async () => {
+			if (!aboutEl || !previewEl) return;
+			const { html } = await renderMarkdown(aboutEl.value, noopMermaid);
+			previewEl.innerHTML = html;
+		};
+		aboutEl?.addEventListener("input", () => {
+			if (timer) clearTimeout(timer);
+			timer = setTimeout(() => void renderAbout(), 500);
+		});
+		void renderAbout();
+
+		document.getElementById("btn-save-settings")?.addEventListener("click", async (ev) => {
+			const btn = ev.currentTarget as HTMLButtonElement;
+			btn.disabled = true;
+			if (statusEl) {
+				statusEl.textContent = "正在保存…";
+				statusEl.className = "status-line";
+			}
+			try {
+				const aboutMd = value("s-about");
+				const { html: aboutHtml } = await renderMarkdown(aboutMd, noopMermaid);
+				const res = await fetch("/admin/api/settings", {
+					method: "PUT",
+					headers: { "content-type": "application/json" },
+					body: JSON.stringify({
+						settings: {
+							[SETTING_KEYS.title]: value("s-title"),
+							[SETTING_KEYS.description]: value("s-description"),
+							[SETTING_KEYS.author]: value("s-author"),
+							[SETTING_KEYS.url]: value("s-url").trim().replace(/\/+$/, ""),
+							[SETTING_KEYS.social]: JSON.stringify({
+								github: value("s-github").trim() || null,
+								zhihu: value("s-zhihu").trim() || null,
+								bilibili: value("s-bilibili").trim() || null,
+								email: value("s-email").trim() || null,
+							}),
+							[SETTING_KEYS.aboutMarkdown]: aboutMd,
+							[SETTING_KEYS.aboutHtml]: aboutHtml,
+						},
+					}),
+				});
+				if (!res.ok) {
+					const body = (await res.json().catch(() => ({}))) as { error?: string };
+					throw new Error(body.error ?? res.statusText);
+				}
+				if (statusEl) {
+					statusEl.textContent = "已保存 ✓ 读者端下一次打开页面即是新配置。";
+					statusEl.className = "status-line ok";
+				}
+			} catch (err) {
+				if (statusEl) {
+					statusEl.textContent = `保存失败：${err instanceof Error ? err.message : String(err)}`;
+					statusEl.className = "status-line error";
+				}
+			} finally {
+				btn.disabled = false;
+			}
+		});
+	}
+</script>
+
+<style>
+	.page-title {
+		font-size: 1.375rem;
+		color: var(--ink);
+		margin: 0 0 1.25rem;
+	}
+	.preview-label {
+		display: block;
+		color: var(--ink-3);
+		font-size: 0.8125rem;
+		margin-bottom: 0.3rem;
+	}
+</style>

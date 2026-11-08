@@ -1,6 +1,6 @@
 # ADR-0002：内容模型——仓库内 Markdown 双 collection
 
-- 状态：已采纳（2026-11-08）；frontmatter 必填部分被 ADR-0008 修订（2026-11-08）
+- 状态：已采纳（2026-11-08）；frontmatter 必填部分被 ADR-0008 修订（2026-11-08）；**内容源决策被 ADR-0009 取代**（2026-11-08）：内容迁入 D1，仓库 Markdown 与 Content Collections 退役，本文备选方案表中「否决 D1 + 自建后台」的结论作废
 - 相关：ADR-0001（纯静态）、ADR-0006（tags/category 仅作筛选）
 
 ## 背景

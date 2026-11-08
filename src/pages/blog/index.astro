@@ -1,12 +1,13 @@
 ---
-import { getCollection } from "astro:content";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import PostList from "../../components/PostList.astro";
-import { sortDescBy, resolvePost } from "../../utils/posts";
+import { getSiteSettings } from "../../lib/settings";
+import { listPosts } from "../../lib/db";
 
-const posts = sortDescBy((await getCollection("blog")).map(resolvePost), (p) => p.data.pubDate);
+const settings = await getSiteSettings(Astro.locals);
+const posts = await listPosts(Astro.locals.runtime!.env.DB, "published");
 
-// 构建期汇总分类与标签的出现次数，芯片上的计数因此是静态的、无脚本也能看到
+// 服务端汇总分类与标签的出现次数，芯片上的计数在 HTML 里、无脚本也能看到
 function tally(values: string[]): [string, number][] {
 	const map = new Map<string, number>();
 	for (const value of values) {
@@ -18,12 +19,12 @@ function tally(values: string[]): [string, number][] {
 	);
 }
 
-const categories = tally(posts.map((p) => p.data.category ?? ""));
-const tags = tally(posts.flatMap((p) => p.data.tags));
+const categories = tally(posts.map((p) => p.category ?? ""));
+const tags = tally(posts.flatMap((p) => p.tags));
 const hasFilters = categories.length + tags.length > 0;
 ---
 
-<BaseLayout title="文章" description={`全部 ${posts.length} 篇文章，可按分类与标签筛选。`}>
+<BaseLayout settings={settings} title="文章" description={`全部 ${posts.length} 篇文章，可按分类与标签筛选。`}>
 	<div class="container">
 		<header class="page-head">
 			<h1>文章</h1>
@@ -67,7 +68,7 @@ const hasFilters = categories.length + tags.length > 0;
 	</div>
 
 	<script>
-		// 列表页前端筛选（ADR-0006）：不建聚合路由，所有文章元数据已在构建期内联进 DOM，
+		// 列表页前端筛选（ADR-0006）：不建聚合路由，所有文章元数据已在服务端内联进 DOM，
 		// 这里只做显示/隐藏，不发任何请求。筛选状态写入 URL 查询参数，使结果可分享、可后退。
 		const bar = document.getElementById("filter-bar");
 

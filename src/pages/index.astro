@@ -1,18 +1,18 @@
 ---
-import { getCollection } from "astro:content";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import PostList from "../components/PostList.astro";
-import { SITE } from "../consts";
-import { sortDescBy, resolvePost } from "../utils/posts";
+import { getSiteSettings } from "../lib/settings";
+import { listPosts } from "../lib/db";
 
-const posts = sortDescBy((await getCollection("blog")).map(resolvePost), (p) => p.data.pubDate);
+const settings = await getSiteSettings(Astro.locals);
+const posts = await listPosts(Astro.locals.runtime!.env.DB, "published");
 ---
 
-<BaseLayout title={SITE.title} description={SITE.description}>
+<BaseLayout settings={settings} title={settings.title} description={settings.description}>
 	<div class="container">
 		<header class="page-head">
-			<h1>{SITE.title}</h1>
-			<p>{SITE.description}</p>
+			<h1>{settings.title}</h1>
+			<p>{settings.description}</p>
 		</header>
 		<PostList posts={posts} />
 	</div>

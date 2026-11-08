@@ -5,24 +5,21 @@ import BaseLayout from "./BaseLayout.astro";
 import Toc from "../components/Toc.astro";
 import CodeCopy from "../components/CodeCopy.astro";
 import FormattedDate from "../components/FormattedDate.astro";
-import { countWords, readingMinutes, type ResolvedPost } from "../utils/posts";
+import type { Post } from "../lib/db";
+import type { SiteSettings } from "../lib/settings";
 
 interface Props {
-	post: ResolvedPost;
-	headings: { depth: number; slug: string; text: string }[];
-	prev: ResolvedPost | null;
-	next: ResolvedPost | null;
+	settings: SiteSettings;
+	post: Post;
+	prev: Post | null;
+	next: Post | null;
 }
 
-const { post, headings, prev, next } = Astro.props;
-const { title, description, pubDate, updatedDate, heroImage, tags, category } = post.data;
-
-const body = post.body ?? "";
-const { total } = countWords(body);
-const minutes = readingMinutes(body);
+const { settings, post, prev, next } = Astro.props;
+const { title, description, pubDate, updatedDate, heroImage, tags, category } = post;
 ---
 
-<BaseLayout title={title} description={description} image={heroImage}>
+<BaseLayout settings={settings} title={title} description={description} image={heroImage}>
 	<div class="container">
 		<article class="article">
 			{heroImage && <img class="article-cover" src={heroImage} alt="" decoding="async" />}
@@ -33,9 +30,9 @@ const minutes = readingMinutes(body);
 					<FormattedDate date={pubDate} />
 					{category && <span class="badge">{category}</span>}
 					<span class="sep" aria-hidden="true">·</span>
-					<span>{total} 字</span>
+					<span>{post.wordCount} 字</span>
 					<span class="sep" aria-hidden="true">·</span>
-					<span>约 {minutes} 分钟读完</span>
+					<span>约 {post.readingMinutes} 分钟读完</span>
 					{updatedDate && (
 						<>
 							<span class="sep" aria-hidden="true">·</span>
@@ -60,11 +57,10 @@ const minutes = readingMinutes(body);
 			</header>
 
 			<div class="article-body">
-				<div class="prose">
-					<slot />
-				</div>
+				{/* 正文是编辑器保存时渲染好的成品 HTML（ADR-0009），直接注入 */}
+				<div class="prose" set:html={post.html} />
 				<aside class="article-aside">
-					<Toc headings={headings} />
+					<Toc headings={post.headings} />
 				</aside>
 			</div>
 
@@ -72,17 +68,17 @@ const minutes = readingMinutes(body);
 				(prev || next) && (
 					<nav class="post-nav" aria-label="文章翻页">
 						{prev ? (
-							<a class="post-nav-link prev" href={`/blog/${prev.id}/`} rel="prev">
+							<a class="post-nav-link prev" href={`/blog/${prev.slug}/`} rel="prev">
 								<span class="post-nav-label">上一篇</span>
-								<span class="post-nav-title">{prev.data.title}</span>
+								<span class="post-nav-title">{prev.title}</span>
 							</a>
 						) : (
 							<span />
 						)}
 						{next ? (
-							<a class="post-nav-link next" href={`/blog/${next.id}/`} rel="next">
+							<a class="post-nav-link next" href={`/blog/${next.slug}/`} rel="next">
 								<span class="post-nav-label">下一篇</span>
-								<span class="post-nav-title">{next.data.title}</span>
+								<span class="post-nav-title">{next.title}</span>
 							</a>
 						) : (
 							<span />

@@ -1,17 +1,22 @@
 ---
 import SocialLinks from "./SocialLinks.astro";
-import { SITE } from "../consts";
+import type { SiteSettings } from "../lib/settings";
 
+interface Props {
+	settings: SiteSettings;
+}
+
+const { settings } = Astro.props;
 const year = new Date().getFullYear();
 ---
 
 <footer class="site-footer">
 	<div class="container footer-inner">
 		<p class="copyright">
-			&copy; {year} {SITE.author} · {SITE.title}
+			&copy; {year} {settings.author} · {settings.title}
 		</p>
-		<SocialLinks />
-		<p class="colophon">由 Astro 静态生成，托管于 Cloudflare Workers</p>
+		<SocialLinks social={settings.social} />
+		<p class="colophon">由 Astro 驱动 · 内容存于 Cloudflare D1 · 托管于 Cloudflare Workers</p>
 	</div>
 </footer>
 

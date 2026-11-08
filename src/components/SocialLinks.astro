@@ -1,9 +1,15 @@
 ---
-import { SITE } from "../consts";
+import type { SiteSettings } from "../lib/settings";
 
 // 社交链接统一用中文文字标签，不塞图标：
 // 知乎/B站的官方图标路径复杂，画错反而显得廉价，文字更干净也更符合清爽基调。
-const LABELS: Record<keyof typeof SITE.social, string> = {
+interface Props {
+	social: SiteSettings["social"];
+}
+
+const { social } = Astro.props;
+
+const LABELS: Record<keyof SiteSettings["social"], string> = {
 	github: "GitHub",
 	zhihu: "知乎",
 	bilibili: "B 站",
@@ -11,11 +17,11 @@ const LABELS: Record<keyof typeof SITE.social, string> = {
 };
 
 // email 允许只填地址，自动补 mailto:
-const links = Object.entries(SITE.social)
-	.filter((entry): entry is [keyof typeof SITE.social, string] => Boolean(entry[1]))
+const links = Object.entries(social)
+	.filter((entry): entry is [keyof SiteSettings["social"], string] => Boolean(entry[1]))
 	.map(([key, value]) => ({
-		key: key as keyof typeof SITE.social,
-		label: LABELS[key as keyof typeof SITE.social],
+		key,
+		label: LABELS[key],
 		href: key === "email" && !value.startsWith("mailto:") ? `mailto:${value}` : value,
 	}));
 ---

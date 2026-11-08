@@ -1,28 +1,16 @@
 // @ts-check
 import { defineConfig } from "astro/config";
-import mdx from "@astrojs/mdx";
 import cloudflare from "@astrojs/cloudflare";
 
-import { remarkPlugins, rehypePlugins, shikiConfig } from "./markdown.config.mjs";
 import { SITE } from "./src/consts";
 
-// 纯静态预渲染：不设置 output，Astro 默认 static 模式，
-// 全部页面在构建期生成 HTML，Worker 只负责伺服 dist/（ADR-0001）。
+// 运行时渲染（ADR-0009）：output 翻转为 server，全部页面按请求从 D1 取数拼装。
+// 重计算（Mermaid/KaTeX/Shiki/字数/摘要）已在编辑器保存时完成并存进 D1（保存时处理），
+// Worker 请求路径只剩取数 + 拼 HTML，读者端零 JS 的原则保留。
 // https://astro.build/config
 export default defineConfig({
 	site: SITE.url,
-	integrations: [
-		mdx({
-			// 与 .md 共用同一份插件配置，避免两条管线行为漂移（ADR-0004）
-			remarkPlugins,
-			rehypePlugins,
-		}),
-	],
-	markdown: {
-		remarkPlugins,
-		rehypePlugins,
-		shikiConfig,
-	},
+	output: "server",
 	adapter: cloudflare({
 		platformProxy: {
 			enabled: true,

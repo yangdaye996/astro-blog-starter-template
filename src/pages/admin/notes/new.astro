@@ -1,0 +1,8 @@
+---
+import AdminLayout from "../../../layouts/AdminLayout.astro";
+import EditorForm from "../../../components/admin/EditorForm.astro";
+---
+
+<AdminLayout title="新随想" current="notes">
+	<EditorForm mode="note" heading="新随想" initial={{ mode: "note" }} />
+</AdminLayout>

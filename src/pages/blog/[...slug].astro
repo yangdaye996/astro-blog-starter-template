@@ -1,27 +1,20 @@
 ---
-import { getCollection, render } from "astro:content";
 import BlogPost from "../../layouts/BlogPost.astro";
-import { sortDescBy, neighbours, resolvePost, type ResolvedPost } from "../../utils/posts";
+import { getSiteSettings } from "../../lib/settings";
+import { getPostBySlug, postNeighbours } from "../../lib/db";
 
-export async function getStaticPaths() {
-	const posts = (await getCollection("blog")).map(resolvePost);
-	return posts.map((post) => ({
-		params: { slug: post.id },
-		props: { post },
-	}));
+// 运行时渲染（ADR-0009）：不再有 getStaticPaths，按请求从 D1 取数。
+// 草稿与不存在的 slug 一律 404，不泄露草稿的存在。
+const { slug } = Astro.params;
+const settings = await getSiteSettings(Astro.locals);
+const db = Astro.locals.runtime!.env.DB;
+
+const post = slug ? await getPostBySlug(db, slug) : null;
+if (!post || post.status !== "published") {
+	return new Response(null, { status: 404 });
 }
 
-interface Props {
-	post: ResolvedPost;
-}
-
-const { post } = Astro.props;
-const { Content, headings } = await render(post);
-
-const all = sortDescBy((await getCollection("blog")).map(resolvePost), (p) => p.data.pubDate);
-const { prev, next } = neighbours(all, post.id);
+const { prev, next } = await postNeighbours(db, post);
 ---
 
-<BlogPost post={post} headings={headings} prev={prev} next={next}>
-	<Content />
-</BlogPost>
+<BlogPost settings={settings} post={post} prev={prev} next={next} />

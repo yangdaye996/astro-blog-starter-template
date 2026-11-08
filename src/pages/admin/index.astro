@@ -1,0 +1,64 @@
+---
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import FormattedDate from "../../components/FormattedDate.astro";
+import { listPosts, listNotes } from "../../lib/db";
+
+const db = Astro.locals.runtime!.env.DB;
+const [posts, notes] = await Promise.all([listPosts(db), listNotes(db)]);
+const drafts = [...posts, ...notes].filter((item) => item.status === "draft").length;
+---
+
+<AdminLayout title="内容列表" current="home">
+	<div class="panel">
+		<h2>文章（{posts.length}）</h2>
+		{
+			posts.length > 0 ? (
+				<ul class="admin-list">
+					{posts.map((post) => (
+						<li>
+							<span class:list={["badge", post.status === "published" ? "badge-published" : "badge-draft"]}>
+								{post.status === "published" ? "已发布" : "草稿"}
+							</span>
+							<a class="item-title" href={`/admin/posts/${post.id}`}>{post.title || post.slug}</a>
+							<span class="item-meta">{post.slug}</span>
+							<span class="item-meta"><FormattedDate date={post.pubDate} variant="short" /></span>
+						</li>
+					))}
+				</ul>
+			) : (
+				<p class="admin-empty">还没有文章。点上方「新文章」写第一篇。</p>
+			)
+		}
+	</div>
+
+	<div class="panel">
+		<h2>随想（{notes.length}）</h2>
+		{
+			notes.length > 0 ? (
+				<ul class="admin-list">
+					{notes.map((note) => (
+						<li>
+							<span class:list={["badge", note.status === "published" ? "badge-published" : "badge-draft"]}>
+								{note.status === "published" ? "已发布" : "草稿"}
+							</span>
+							<a class="item-title" href={`/admin/notes/${note.id}`}>
+								{note.markdown.slice(0, 60).replace(/\s+/g, " ") || "（空）"}
+							</a>
+							<span class="item-meta"><FormattedDate date={note.date} variant="short" /></span>
+						</li>
+					))}
+				</ul>
+			) : (
+				<p class="admin-empty">还没有随想。点上方「新随想」记第一笔。</p>
+			)
+		}
+	</div>
+
+	{
+		drafts > 0 && (
+			<p class="admin-empty">
+				提示：有 {drafts} 篇草稿未发布，读者端不可见。
+			</p>
+		)
+	}
+</AdminLayout>

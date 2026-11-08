@@ -1,17 +1,13 @@
 ---
 import FormattedDate from "./FormattedDate.astro";
-import { countWords, readingMinutes, type ResolvedPost } from "../utils/posts";
+import type { Post } from "../lib/db";
 
 interface Props {
-	post: ResolvedPost;
+	post: Post;
 }
 
 const { post } = Astro.props;
-const { title, description, pubDate, heroImage, tags, category } = post.data;
-
-const body = post.body ?? "";
-const { total } = countWords(body);
-const minutes = readingMinutes(body);
+const { title, description, pubDate, heroImage, tags, category } = post;
 ---
 
 <article
@@ -21,16 +17,16 @@ const minutes = readingMinutes(body);
 >
 	{heroImage && <img class="post-card-cover" src={heroImage} alt="" loading="lazy" decoding="async" />}
 	<h2 class="post-card-title">
-		<a href={`/blog/${post.id}/`}>{title}</a>
+		<a href={`/blog/${post.slug}/`}>{title}</a>
 	</h2>
 	<p class="post-card-desc">{description}</p>
 	<div class="meta-row">
 		<FormattedDate date={pubDate} variant="short" />
 		{category && <span class="badge">{category}</span>}
 		<span class="sep" aria-hidden="true">·</span>
-		<span>{total} 字</span>
+		<span>{post.wordCount} 字</span>
 		<span class="sep" aria-hidden="true">·</span>
-		<span>约 {minutes} 分钟</span>
+		<span>约 {post.readingMinutes} 分钟</span>
 		{
 			tags.length > 0 && (
 				<>
