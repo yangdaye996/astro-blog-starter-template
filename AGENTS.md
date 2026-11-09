@@ -8,7 +8,8 @@
 | --- | --- |
 | `npm run dev` | 本地静态服务器（serve，端口 4321）。ES modules 不能 `file://` 直开，必须走 HTTP |
 | `npm run check` | **验证命令**：全部站点 JS 语法检查（`scripts/check.mjs`，node --check），改完代码跑这个 |
-| `git push` | **部署**：push 到 main 触发 Cloudflare Workers Builds 自动部署（`npx wrangler deploy` 在 CF 构建机执行，本地无 wrangler） |
+| `npm run build` | **空壳**：复用 check。纯静态站没有真实构建步骤，它存在只为满足工具契约（Cloudflare 部署管线的构建命令），本地不产生任何产物 |
+| `git push` | **部署**：push 到 main 触发 Cloudflare Workers Builds 自动部署（构建机执行 `npx wrangler deploy`，本地无 wrangler） |
 
 没有构建、没有 tsc、没有测试框架。验证 = `npm run check` + 本地人工过一遍相关页面全流程。
 
