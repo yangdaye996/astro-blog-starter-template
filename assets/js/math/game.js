@@ -29,52 +29,26 @@ setupSeg(document.getElementById('seg-seconds'), (v) => (seconds = Number(v)));
 // ---------- 题库生成器 ----------
 
 const randInt = (min, max) => min + Math.floor(Math.random() * (max - min + 1));
-const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
-// 各档题型池：L1 加减 → L2 加乘除前的乘 → L3 全量
-const KINDS = {
-	1: ['add', 'sub'],
-	2: ['add', 'sub', 'mul'],
-	3: ['add', 'sub', 'mul', 'div'],
-};
-
-// 返回 { text, answer }；保证：L1 和不超 100、减不出负数；除法必整除
+// 乘法专项（聚焦纯乘法，去掉加减除）：
+// L1 两位×一位（积 2–3 位）；L2 两位×两位、积三位；L3 两位×两位、积四位。
+// 生成器保证乘数均为两位数、积的位数符合档位。
 export function genQuestion(lv) {
-	const kind = pick(KINDS[lv]);
-	switch (kind) {
-		case 'add': {
-			if (lv === 1) {
-				const a = randInt(10, 89);
-				const b = randInt(10, Math.min(89, 100 - a));
-				return { text: `${a} + ${b}`, answer: a + b };
-			}
-			const a = randInt(100, 999);
-			const b = randInt(100, 999);
-			return { text: `${a} + ${b}`, answer: a + b };
-		}
-		case 'sub': {
-			if (lv === 1) {
-				const a = randInt(20, 99);
-				const b = randInt(10, a);
-				return { text: `${a} − ${b}`, answer: a - b };
-			}
-			const a = randInt(200, 999);
-			const b = randInt(100, a);
-			return { text: `${a} − ${b}`, answer: a - b };
-		}
-		case 'mul': {
-			// 两位 × 一位；L3 两端都取大数
-			const a = lv === 3 ? randInt(23, 99) : randInt(11, 99);
-			const b = lv === 3 ? randInt(3, 9) : randInt(2, 9);
-			return { text: `${a} × ${b}`, answer: a * b };
-		}
-		case 'div': {
-			// 两位 ÷ 一位，先定商再回乘，天然整除
-			const b = randInt(2, 9);
-			const q = randInt(10, Math.floor(99 / b));
-			return { text: `${b * q} ÷ ${b}`, answer: q };
-		}
+	if (lv === 1) {
+		const a = randInt(11, 99);
+		const b = randInt(2, 9);
+		return { text: `${a} × ${b}`, answer: a * b };
 	}
+	if (lv === 2) {
+		// a∈[12,49] 两位；b∈[10,⌊999/a⌋]，b 上限与 a 一起把积托在三位以内
+		const a = randInt(12, 49);
+		const b = randInt(10, Math.min(99, Math.floor(999 / a)));
+		return { text: `${a} × ${b}`, answer: a * b };
+	}
+	// L3：b 下限 ⌈1000/a⌉ 保证积进四位
+	const a = randInt(11, 99);
+	const b = randInt(Math.max(10, Math.ceil(1000 / a)), 99);
+	return { text: `${a} × ${b}`, answer: a * b };
 }
 
 // ---------- 会话状态 ----------
@@ -174,7 +148,7 @@ function judge() {
 function onKey(key) {
 	if (!running || pending) return;
 	if (key >= '0' && key <= '9') {
-		// 最大答案 1998（999+999），四位封顶
+		// 最大答案 9801（99×99，L3），四位封顶
 		typed = (typed + key).slice(0, 4);
 		renderEntry();
 	} else if (key === 'back') {
