@@ -1,21 +1,8 @@
 {
-	"name": "astro-blog-starter-template",
+	"name": "mind-gym",
 	"compatibility_date": "2025-10-08",
-	"compatibility_flags": ["nodejs_compat"],
-	"main": "./dist/_worker.js/index.js",
 	"assets": {
-		"directory": "./dist",
-		"binding": "ASSETS"
-	},
-	"d1_databases": [
-		{
-			"binding": "DB",
-			"database_name": "blog",
-			"database_id": "00000000-0000-0000-0000-000000000000"
-		}
-	],
-	"observability": {
-		"enabled": true
-	},
-	"upload_source_maps": true
+		"directory": "./",
+		"not_found_handling": "404-page"
+	}
 }

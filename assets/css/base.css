@@ -1,0 +1,421 @@
+/* ============================================================
+   训练台 · 共享样式与设计令牌（ADR-0014）
+   令牌唯一源：本文件 :root，每个令牌只有一组值，只做浅色单主题。
+   模块专属样式写在各页 <style> 里；跨页复用的组件一律放这里。
+   陷阱（继承旧教训）：设置了 display 的类会盖掉 UA 的
+   [hidden]{display:none}，用 hidden 控显隐的元素必须保留文末规则。
+   ============================================================ */
+
+:root {
+	/* 色板：中性色浅淡让位盘面，强调色饱满支撑状态反馈 */
+	--bg: #f4f6fa;
+	--surface: #ffffff;
+	--surface-2: #eef1f7;
+	--ink: #182031;
+	--ink-2: #5b6578;
+	--ink-3: #9aa3b5;
+	--line: #dfe4ee;
+	--accent: #3f51f5;
+	--accent-strong: #2f3fd0;
+	--accent-soft: #e6e9fe;
+	--good: #16a34a;
+	--good-soft: #dcfce7;
+	--bad: #dc2626;
+	--bad-soft: #fee2e2;
+	--gold: #d97706;
+
+	/* 形状与层次 */
+	--radius: 14px;
+	--radius-s: 9px;
+	--shadow: 0 1px 2px rgb(24 32 49 / 0.05), 0 4px 16px rgb(24 32 49 / 0.06);
+
+	/* 字体：系统栈零依赖（ADR-0014，废除字体子集） */
+	--font:
+		-apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+		"Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html {
+	-webkit-text-size-adjust: 100%;
+}
+
+body {
+	margin: 0;
+	background: var(--bg);
+	color: var(--ink);
+	font-family: var(--font);
+	font-size: 16px;
+	line-height: 1.6;
+}
+
+.container {
+	max-width: 760px;
+	margin-inline: auto;
+	padding: 20px 20px 64px;
+}
+
+/* 数字等宽：计分与倒计时专用，防跳动抖宽（ADR-0014） */
+.num {
+	font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 顶栏导航 ---------- */
+
+.topbar {
+	position: sticky;
+	top: 0;
+	z-index: 10;
+	background: rgb(255 255 255 / 0.92);
+	backdrop-filter: blur(8px);
+	border-bottom: 1px solid var(--line);
+}
+
+.nav {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	flex-wrap: wrap;
+	max-width: 760px;
+	margin-inline: auto;
+	padding: 10px 20px;
+}
+
+.brand {
+	font-weight: 800;
+	font-size: 17px;
+	color: var(--accent);
+	text-decoration: none;
+	margin-right: 12px;
+	letter-spacing: 0.02em;
+}
+
+.nav a {
+	color: var(--ink-2);
+	text-decoration: none;
+	font-size: 15px;
+	padding: 5px 11px;
+	border-radius: 999px;
+	transition: background 0.15s, color 0.15s;
+}
+
+.nav a:hover {
+	background: var(--surface-2);
+	color: var(--ink);
+}
+
+.nav a[aria-current="page"] {
+	background: var(--accent);
+	color: #fff;
+	font-weight: 600;
+}
+
+/* ---------- 页头 ---------- */
+
+.page-head {
+	margin: 28px 0 20px;
+}
+
+.page-head h1 {
+	margin: 0 0 4px;
+	font-size: 28px;
+	letter-spacing: 0.01em;
+}
+
+.page-head .sub {
+	margin: 0;
+	color: var(--ink-2);
+	font-size: 15px;
+}
+
+/* ---------- 卡片 ---------- */
+
+.card {
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	box-shadow: var(--shadow);
+	padding: 20px;
+	margin: 16px 0;
+}
+
+.card h2 {
+	margin: 0 0 12px;
+	font-size: 18px;
+}
+
+.card .hint {
+	color: var(--ink-3);
+	font-size: 13px;
+	margin-top: 10px;
+}
+
+/* 首页模块入口卡片 */
+.entry-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: 14px;
+	margin: 18px 0;
+}
+
+.entry-card {
+	display: block;
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	box-shadow: var(--shadow);
+	padding: 18px;
+	text-decoration: none;
+	color: var(--ink);
+	transition: transform 0.15s, border-color 0.15s;
+}
+
+.entry-card:hover {
+	transform: translateY(-2px);
+	border-color: var(--accent);
+}
+
+.entry-card .icon {
+	font-size: 30px;
+	line-height: 1;
+}
+
+.entry-card .name {
+	font-size: 18px;
+	font-weight: 700;
+	margin: 8px 0 2px;
+}
+
+.entry-card .desc {
+	font-size: 13.5px;
+	color: var(--ink-2);
+}
+
+/* 今日状态徽标 */
+.badge {
+	display: inline-block;
+	margin-top: 10px;
+	font-size: 12.5px;
+	padding: 3px 10px;
+	border-radius: 999px;
+	background: var(--surface-2);
+	color: var(--ink-2);
+}
+
+.badge.done {
+	background: var(--good-soft);
+	color: var(--good);
+	font-weight: 600;
+}
+
+/* ---------- 统计总览卡 ---------- */
+
+.stat-row {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 12px;
+	margin: 18px 0;
+}
+
+.stat-card {
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	box-shadow: var(--shadow);
+	padding: 16px 18px;
+	text-align: center;
+}
+
+.stat-card .value {
+	font-size: 30px;
+	font-weight: 800;
+	color: var(--accent);
+}
+
+.stat-card .label {
+	font-size: 13px;
+	color: var(--ink-2);
+	margin-top: 2px;
+}
+
+/* ---------- 分段选择器（难度档 / 时长 / n 值）---------- */
+
+.seg {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.seg button {
+	font: inherit;
+	font-size: 15px;
+	padding: 9px 18px;
+	border-radius: 999px;
+	border: 1px solid var(--line);
+	background: var(--surface);
+	color: var(--ink-2);
+	cursor: pointer;
+	transition: all 0.15s;
+}
+
+.seg button:hover {
+	border-color: var(--accent);
+	color: var(--accent);
+}
+
+.seg button[aria-pressed="true"] {
+	background: var(--accent);
+	border-color: var(--accent);
+	color: #fff;
+	font-weight: 600;
+}
+
+.seg-title {
+	font-size: 14px;
+	color: var(--ink-2);
+	margin: 14px 0 8px;
+}
+
+.seg-title:first-child {
+	margin-top: 0;
+}
+
+/* ---------- 按钮 ---------- */
+
+.btn {
+	font: inherit;
+	font-size: 16px;
+	font-weight: 600;
+	padding: 12px 28px;
+	border-radius: var(--radius-s);
+	border: none;
+	background: var(--accent);
+	color: #fff;
+	cursor: pointer;
+	transition: background 0.15s;
+}
+
+.btn:hover {
+	background: var(--accent-strong);
+}
+
+.btn:disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+
+.btn.ghost {
+	background: var(--surface);
+	color: var(--ink-2);
+	border: 1px solid var(--line);
+	font-weight: 500;
+}
+
+.btn.ghost:hover {
+	border-color: var(--accent);
+	color: var(--accent);
+	background: var(--surface);
+}
+
+.btn.danger {
+	background: var(--bad);
+}
+
+.btn.danger:hover {
+	background: #b91c1c;
+}
+
+.btn.big {
+	width: 100%;
+	font-size: 18px;
+	padding: 16px;
+}
+
+/* ---------- 明细行列表（统计页）---------- */
+
+.rowlist {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.rowlist li {
+	display: flex;
+	align-items: baseline;
+	gap: 12px;
+	padding: 10px 2px;
+	border-bottom: 1px solid var(--line);
+	font-size: 14.5px;
+}
+
+.rowlist li:last-child {
+	border-bottom: none;
+}
+
+.rowlist .when {
+	color: var(--ink-3);
+	font-size: 13px;
+	min-width: 88px;
+}
+
+.rowlist .what {
+	color: var(--ink);
+	flex: 1;
+}
+
+.rowlist .result {
+	color: var(--ink-2);
+	font-size: 13.5px;
+}
+
+.module-tag {
+	font-size: 12px;
+	font-weight: 600;
+	padding: 2px 8px;
+	border-radius: 999px;
+	background: var(--accent-soft);
+	color: var(--accent-strong);
+	white-space: nowrap;
+}
+
+/* ---------- 空状态 ---------- */
+
+.empty {
+	text-align: center;
+	color: var(--ink-3);
+	padding: 28px 16px;
+	font-size: 14.5px;
+	border: 1px dashed var(--line);
+	border-radius: var(--radius-s);
+	background: var(--surface-2);
+}
+
+.empty .big {
+	font-size: 26px;
+	margin-bottom: 6px;
+}
+
+/* ---------- JS 可用性提示（ADR-0014）---------- */
+
+.js-warn {
+	display: none;
+	background: var(--bad-soft);
+	color: var(--bad);
+	padding: 12px 16px;
+	border-radius: var(--radius-s);
+	font-size: 14px;
+	margin: 16px 0;
+}
+
+html.no-js .js-warn {
+	display: block;
+}
+
+/* ---------- [hidden] 陷阱兜底（ADR-0014）---------- */
+
+[hidden] {
+	display: none !important;
+}

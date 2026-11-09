@@ -1,57 +1,55 @@
 # AGENTS.md
 
-中文个人博客：Astro server 输出运行时渲染，内容存 Cloudflare D1，站内 `/admin` 在线编辑（ADR-0009）。Worker 请求路径只做取数拼装，重计算全部在编辑器保存时完成。代码注释与文档一律用中文，与现有风格一致。
+中文认知训练站：心算、N-back、冥想三模块 + 统计页。**纯静态、无构建**（ADR-0010/0011）：浏览器加载的就是仓库文件，无 SSR、无数据库、无账号，训练记录存浏览器 localStorage（ADR-0012）。代码注释与文档一律用中文，与现有风格一致。
 
 ## 命令
 
 | 命令 | 作用 |
 | --- | --- |
-| `npm run dev` | 开发服务器（本地 D1，数据在 `.wrangler/state/`） |
-| `npm run build` | 构建（SSR + 静态资产） |
-| `npm run check` | **验证命令**：build + `tsc` + `wrangler deploy --dry-run`，改完代码跑这个 |
-| `npm run import` / `export` | 内容迁移 / 备份导出（仅本地库；`--replace` 有空源拒绝护栏） |
-| `npx wrangler d1 migrations apply blog --local` | 应用 D1 迁移 |
+| `npm run dev` | 本地静态服务器（serve，端口 4321）。ES modules 不能 `file://` 直开，必须走 HTTP |
+| `npm run check` | **验证命令**：`wrangler deploy --dry-run`，改完代码跑这个 |
+| `npm run deploy` | 部署到 Cloudflare（assets-only Worker） |
 
-本地库重置：`rm -rf .wrangler/state && npx wrangler d1 migrations apply blog --local`（再用 `npm run import -- --replace` 灌内容）。
+没有构建、没有 tsc、没有测试框架。验证 = `npm run check` + 本地人工过一遍相关页面全流程。
 
 ## 架构硬规则（依据 docs/adr/，改架构前先读）
 
-- **运行时渲染（ADR-0009）**：全部读者页面按请求从 D1 取数。**Worker 请求路径禁止重计算**——Mermaid/KaTeX/Shiki/字数/摘要一律不得出现在请求处理链路。
-- **保存时处理唯一入口**：`src/lib/render-markdown.ts` 是编辑器（浏览器）与导入脚本（Node，mermaid-isomorphic）共用的渲染管线。改 Markdown 渲染行为只改这一份，两条路径共用是刻意设计，防漂移。
-- **D1 唯一真源**：代码仓库不放内容文件。任何「把内容写回 git」的新需求必须另开 ADR。
-- **Access 保护 /admin（ADR-0009）**：由 Cloudflare Zero Trust 控制台配置，代码库无法表达。换账号/换域名/重建 Worker 时遗漏这步 = 编辑器裸奔。本地 dev 不经 Access 属预期。
-- **读者端零 JS**：唯一例外是 TOC 滚动高亮与代码复制按钮（纯增强，无脚本仍可读）。
-- **浅色单主题（ADR-0005）**：不做暗色模式。设计令牌在 `src/styles/global.css` 的 `:root`，每个令牌只有一组值。
-- **明确不存在的功能**：RSS、sitemap、分类页/标签页聚合路由、评论、站内搜索、i18n。不要"顺手补上"（ADR-0006/0007/0009）。草稿机制**已开启**（D1 status 字段，ADR-0009 废除了原禁令）。
-- **站点身份**：真源是 D1 settings 表（编辑器可改）；`src/consts.ts` 的 `SITE` 块只是缺省值。`NAV`/`READING_SPEED` 留在代码。
-- **大内容写入必须走参数绑定**：D1 单条 SQL 语句上限 100KB（成品 HTML 动辄几百 KB，实测 SQLITE_TOOBIG）。一律用 `src/lib/db.ts` 的绑定参数写入，不要拼 SQL 文本。
-- **hast 属性陷阱**：rehype 树里 class 在 `properties.className`，不在顶层 `className`（踩过：shiki 分支因此静默不命中）。`rehype-slug` 的 id 在 `properties.id`。
-- **shiki v4 的 `codeToHtml` 是 async**，返回 Promise；transformer 里先收集节点再 for-await。
-- **workerd 类型冲突**：`worker-configuration.d.ts` 的全局 `Element`（HTMLRewriter）会与 lib.dom 合并，`el<HTMLSelectElement>` 这类泛型约束会误报 TS2344——用 `as unknown as` 中转断言绕开。
-- **字体**：标题层 = fontsource unicode-range 分片（`@fontsource/noto-sans-sc/700.css`），正文 = 系统字体栈。没有扫描式子集，新增文案不需要任何字体操作。
+- **纯静态无构建（ADR-0011）**：零构建步骤、零运行时第三方依赖。不引入框架、打包器、图表库、字体包。新需求先想「原生能不能做」，做不了先开 ADR。
+- **localStorage 唯一真源（ADR-0012）**：训练记录只存 localStorage 的 `mindgym:v1:sessions`。key 里的 `v1` 是数据版本——改字段结构必须新开 `v2` 并写迁移函数，禁止原地改语义。写入时机唯一：会话结束/明确放弃时一次性写入。
+- **统计现算不落盘**：streak、趋势、汇总都是日志的纯函数（`assets/js/stats.js`），禁止缓存派生数据。
+- **会话 schema**：三模块的 params/result 字段以 ADR-0013 为准。加字段 = 升 schema 版本，不是随手加。
+- **N-back 目标必须构造**：一轮 ≥ 6 个目标是生成器保证的，不许改成纯随机（`assets/js/nback/game.js` 注释写明策略）。
+- **浅色单主题（ADR-0014）**：设计令牌唯一源 = `assets/css/base.css` 的 `:root`，每个令牌一组值。模块专属样式写在各页 `<style>`，跨页复用的组件进 base.css。
+- **JS 可用性分层（ADR-0014）**：首页/统计页 JS 失效仍须有骨架（链接可点、空状态可见）；训练三页无 JS 显示 `.js-warn` 提示，属预期。
+- **明确不做**：暗色模式、账号/登录、服务端存储、导入功能、双 n-back、自适应难度、多呼吸节奏。均未立项，别顺手加；要加先改对应 ADR。
+
+## 已知陷阱（踩过的坑）
+
+- **`file://` 打不开**：ES modules 被 CORS 拦截。控制台报 module 加载错误先查访问方式，不是代码问题。
+- **`[hidden]` 与 display 覆盖**：凡设置了 `display` 的类，用 `hidden` 控显隐时必须有 `[hidden]{display:none}` 兜底（base.css 文末有全局 `!important` 兜底条）。
+- **空格键**：N-back 页空格 = 匹配，`keydown` 必须先 `preventDefault()`，否则页面跟着滚。
+- **无类型检查**：JS 裸奔无编译器兜底。纪律：每 JS 文件职责单一（store/stats/audio/各页逻辑）；改共享文件（store.js/stats.js）时，三个模块页 + 统计页都要人工过一遍。
 
 ## 内容与约定
 
-- 内容在 D1（posts/notes/settings 三张表，schema 见 `migrations/`）。`src/content/` 已退役；`npm run import` 仅用于一次性迁移或从 Markdown 灌回。
-- 日期固化在 `pub_date` 列 / frontmatter `pubDate`，clone 不再丢时间戳。
-- 术语以 `docs/glossary.md` 为准：文章（posts）/ 随想（notes）/ 卡片 / 筛选芯片 / 徽标 / 编辑器 / 保存时处理 / 真源。
-- 每个列表页必须有空状态设计。
-- 样式：设置了 `display` 的类（如 `.post-card`、`.chip`）会盖掉 UA 的 `[hidden]{display:none}`，用 `hidden` 控显隐时需补一条该规则。
-- 编辑器表单逻辑在 `src/lib/editor-client.ts`，新字段先改 `EditorForm.astro` + `editor-client.ts` + `api-helpers.ts` 校验 + db 层四处，保持一致。
-
-## 已知构建提示（预期行为，不要尝试修复）
-
-SESSION KV 提示、sharp 不支持提示、vite chunk >500kB 警告（编辑器管线分包，仅 /admin 加载）均为预期，详见 README。
+- 术语以 `docs/glossary.md` 为准：训练站 / 模块 / 会话 / 会话日志 / 打卡 / 难度档 / n 值 / 命中·漏报·误报 / 准确率 / 呼吸引导 / 钟声。
+- **每个列表类区块必须有空状态设计**（无数据给引导文案，不给空白）。
+- 记录备份：stats 页导出 JSON 是唯一备份手段，README 明示；导入（恢复）未立项。
+- 页面结构：`/math/`、`/nback/`、`/meditation/`、`/stats/` 各自 index.html。导航五链接写死在各页 HTML——无构建无组件复用，靠约定保持一致，新增页面记得同步全部页面。
+- 部署排除清单在根目录 `.assetsignore`（docs、node_modules、package 等不进站点）；新加非站点文件记得同步进去。
 
 ## 故障排查
 
-- 页面数据没变：SSR 直读 D1 无缓存，刷新即变；先确认连的库（`--local`/`--remote`）。
-- 保存报 slug 冲突：slug 全局唯一，换一个。
-- `npm run check` 里 tsc 报 DOM 类型怪错：先怀疑 workerd 类型合并（见上），不是业务代码问题。
+- **`wrangler deploy` 日志「Read N files」虚高是正常现象**：那是 `.assetsignore` 过滤**前**的原始目录遍历计数（node_modules 一起计入）。真实排除清单用 `WRANGLER_LOG=debug npx wrangler deploy --dry-run 2>&1 | grep "Ignoring asset:"` 查看，别被吓到也别去改架构。
+- **别用 `wrangler dev` 预览本站**：assets 目录 = 仓库根，dev 会连自己的 `.wrangler` 状态一起监视，陷入「Reloading local server」死循环。本地预览一律 `npm run dev`（serve）。
+- 数据没变：先确认看的是同一台浏览器的同一个 profile（localStorage 不跨浏览器、不跨设备）。
+- 记录消失：大概率清过站点数据，无备份即无解（ADR-0012 风险条目）；有 JSON 备份可手动写回。
+- 404 页不生效：`wrangler.json` 的 `not_found_handling: "404-page"` 依赖根目录 `404.html`。
+- 钟声不响：浏览器要求用户手势后才能出声（AudioContext 解锁），训练流程都是点击触发的，属正常；别在页面加载时就调用。
 
 ## 改动前必读
 
-- 改架构：`docs/adr/README.md`（9 条 ADR 索引 + 已识别风险与待办）。
-- 改渲染管线：`src/lib/render-markdown.ts` 顶部注释与 ADR-0004/0009。
-- 改视觉：`src/styles/global.css` 设计令牌与 ADR-0005。
-- 部署：根目录 `README.md` 的「首次部署」一节（D1 建库、Access 配置）。
+- 改玩法/难度/成绩口径：`docs/adr/ADR-0013-module-specs.md`（规格唯一真源）。
+- 改存储/统计：`docs/adr/ADR-0012-localstorage-storage.md`。
+- 改视觉：`assets/css/base.css` 令牌与 `docs/adr/ADR-0014-visual-redesign.md`。
+- 部署：根目录 `README.md`。

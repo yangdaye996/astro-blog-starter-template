@@ -1,0 +1,185 @@
+<!doctype html>
+<html class="no-js" lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>心算 · 心智训练站</title>
+		<meta name="description" content="限时心算冲刺：三档难度，倒计时内答对尽可能多的题。" />
+		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+		<link rel="stylesheet" href="/assets/css/base.css" />
+		<script>
+			document.documentElement.classList.remove('no-js');
+		</script>
+		<style>
+			/* ---------- 心算专属（本页自包含）---------- */
+			.game-top {
+				display: flex;
+				align-items: baseline;
+				justify-content: space-between;
+			}
+			.timer {
+				font-size: 40px;
+				font-weight: 800;
+				color: var(--accent);
+			}
+			.timer.low {
+				color: var(--bad);
+			}
+			.progress-line {
+				color: var(--ink-3);
+				font-size: 14px;
+			}
+			.question {
+				text-align: center;
+				font-size: 52px;
+				font-weight: 800;
+				margin: 26px 0 6px;
+				letter-spacing: 0.04em;
+			}
+			.entry-line {
+				text-align: center;
+				font-size: 34px;
+				font-weight: 700;
+				color: var(--ink-2);
+				min-height: 52px;
+				border-bottom: 2px solid var(--line);
+				max-width: 220px;
+				margin: 0 auto 8px;
+			}
+			.feedback {
+				text-align: center;
+				min-height: 30px;
+				font-size: 16px;
+				font-weight: 700;
+			}
+			.feedback.ok {
+				color: var(--good);
+			}
+			.feedback.err {
+				color: var(--bad);
+			}
+			.keypad {
+				display: grid;
+				grid-template-columns: repeat(3, 1fr);
+				gap: 10px;
+				max-width: 320px;
+				margin: 18px auto 0;
+			}
+			.keypad button {
+				font: inherit;
+				font-size: 21px;
+				font-weight: 600;
+				padding: 15px 0;
+				border-radius: var(--radius-s);
+				border: 1px solid var(--line);
+				background: var(--surface);
+				color: var(--ink);
+				cursor: pointer;
+			}
+			.keypad button:active {
+				background: var(--surface-2);
+			}
+			.keypad button.wide {
+				grid-column: 1 / -1;
+				background: var(--accent);
+				border-color: var(--accent);
+				color: #fff;
+			}
+			.keypad button:disabled {
+				opacity: 0.5;
+				cursor: not-allowed;
+			}
+			.result-num {
+				font-size: 44px;
+				font-weight: 800;
+				color: var(--accent);
+			}
+			.result-line {
+				color: var(--ink-2);
+				margin: 4px 0 14px;
+			}
+		</style>
+	</head>
+	<body>
+		<header class="topbar">
+			<nav class="nav">
+				<a class="brand" href="/">心智训练站</a>
+				<a href="/">首页</a>
+				<a href="/math/" aria-current="page">心算</a>
+				<a href="/nback/">N-back</a>
+				<a href="/meditation/">冥想</a>
+				<a href="/stats/">统计</a>
+			</nav>
+		</header>
+
+		<main class="container">
+			<div class="page-head">
+				<h1>心算</h1>
+				<p class="sub">限时冲刺：倒计时内键入答案，答对尽可能多。</p>
+			</div>
+
+			<div class="js-warn">心算需要启用 JavaScript，否则无法训练。</div>
+
+			<!-- 开局配置 -->
+			<section class="card" id="setup">
+				<h2>选择难度与时长</h2>
+				<div class="seg-title">难度档</div>
+				<div class="seg" id="seg-level">
+					<button data-value="1" aria-pressed="true">L1 入门</button>
+					<button data-value="2" aria-pressed="false">L2 进阶</button>
+					<button data-value="3" aria-pressed="false">L3 挑战</button>
+				</div>
+				<div class="seg-title">时长</div>
+				<div class="seg" id="seg-seconds">
+					<button data-value="30" aria-pressed="false">30 秒</button>
+					<button data-value="60" aria-pressed="true">60 秒</button>
+					<button data-value="120" aria-pressed="false">120 秒</button>
+				</div>
+				<div class="seg-title">题型随档位扩展：L1 两位加减 → L2 三位加减 + 两位×一位 → L3 再加整除除法</div>
+				<div style="margin-top: 18px">
+					<button class="btn big" id="btn-start">开始训练</button>
+				</div>
+			</section>
+
+			<!-- 训练进行中 -->
+			<section class="card" id="game" hidden>
+				<div class="game-top">
+					<span class="timer num" id="timer">60</span>
+					<span class="progress-line num" id="progress">第 1 题</span>
+				</div>
+				<div class="question num" id="question"></div>
+				<div class="entry-line num" id="entry"></div>
+				<div class="feedback" id="feedback"></div>
+				<div class="keypad" id="keypad">
+					<button data-key="1">1</button>
+					<button data-key="2">2</button>
+					<button data-key="3">3</button>
+					<button data-key="4">4</button>
+					<button data-key="5">5</button>
+					<button data-key="6">6</button>
+					<button data-key="7">7</button>
+					<button data-key="8">8</button>
+					<button data-key="9">9</button>
+					<button data-key="skip">跳过</button>
+					<button data-key="0">0</button>
+					<button data-key="back">退格</button>
+					<button class="wide" data-key="submit">提交（回车）</button>
+				</div>
+			</section>
+
+			<!-- 结果 -->
+			<section class="card" id="result" hidden>
+				<h2>本轮成绩</h2>
+				<div class="result-num num" id="r-correct">0</div>
+				<p class="result-line num" id="r-detail"></p>
+				<p class="hint">已写入本地记录。统计页可看趋势曲线。</p>
+				<div style="display: flex; gap: 10px">
+					<button class="btn" id="btn-again">再来一轮</button>
+					<a class="btn ghost" href="/stats/" style="text-decoration: none; text-align: center">看统计</a>
+				</div>
+			</section>
+		</main>
+
+		<script type="module" src="/assets/js/math/game.js"></script>
+	</body>
+</html>

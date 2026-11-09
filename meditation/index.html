@@ -1,0 +1,158 @@
+<!doctype html>
+<html class="no-js" lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>冥想 · 心智训练站</title>
+		<meta name="description" content="极简静坐计时器：可选呼吸引导，结束时一声钟。" />
+		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+		<link rel="stylesheet" href="/assets/css/base.css" />
+		<script>
+			document.documentElement.classList.remove('no-js');
+		</script>
+		<style>
+			/* ---------- 冥想专属 ---------- */
+			.stage {
+				position: relative;
+				text-align: center;
+				padding: 10px 0 6px;
+			}
+			.progress-track {
+				height: 4px;
+				border-radius: 999px;
+				background: var(--surface-2);
+				overflow: hidden;
+				margin-bottom: 8px;
+			}
+			.progress-bar {
+				height: 100%;
+				width: 0%;
+				background: var(--accent);
+				transition: width 0.3s linear;
+			}
+			.remain {
+				font-size: 56px;
+				font-weight: 800;
+				color: var(--ink);
+				margin: 10px 0 4px;
+			}
+			.ball-wrap {
+				height: 220px;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				gap: 14px;
+			}
+			.ball {
+				width: 120px;
+				height: 120px;
+				border-radius: 50%;
+				background: radial-gradient(circle at 35% 30%, var(--accent), var(--accent-strong));
+				animation: breathe 8s ease-in-out infinite;
+				will-change: transform;
+			}
+			.ball.paused {
+				animation-play-state: paused;
+			}
+			@keyframes breathe {
+				0% {
+					transform: scale(0.62);
+				}
+				50% {
+					transform: scale(1);
+				}
+				100% {
+					transform: scale(0.62);
+				}
+			}
+			.breath-word {
+				font-size: 20px;
+				font-weight: 700;
+				color: var(--accent);
+				letter-spacing: 0.2em;
+			}
+			.count-in {
+				font-size: 72px;
+				font-weight: 800;
+				color: var(--accent);
+			}
+			.result-num {
+				font-size: 44px;
+				font-weight: 800;
+				color: var(--accent);
+			}
+		</style>
+	</head>
+	<body>
+		<header class="topbar">
+			<nav class="nav">
+				<a class="brand" href="/">心智训练站</a>
+				<a href="/">首页</a>
+				<a href="/math/">心算</a>
+				<a href="/nback/">N-back</a>
+				<a href="/meditation/" aria-current="page">冥想</a>
+				<a href="/stats/">统计</a>
+			</nav>
+		</header>
+
+		<main class="container">
+			<div class="page-head">
+				<h1>冥想</h1>
+				<p class="sub">静坐计时，结束时一声钟。可开呼吸引导。</p>
+			</div>
+
+			<div class="js-warn">冥想计时需要启用 JavaScript。</div>
+
+			<!-- 开局配置 -->
+			<section class="card" id="setup">
+				<h2>选择时长与引导</h2>
+				<div class="seg-title">时长</div>
+				<div class="seg" id="seg-min">
+					<button data-value="5" aria-pressed="true">5 分钟</button>
+					<button data-value="10" aria-pressed="false">10 分钟</button>
+					<button data-value="15" aria-pressed="false">15 分钟</button>
+					<button data-value="20" aria-pressed="false">20 分钟</button>
+				</div>
+				<div class="seg-title">呼吸引导</div>
+				<div class="seg" id="seg-breath">
+					<button data-value="on" aria-pressed="true">开（4 秒吸 / 4 秒呼）</button>
+					<button data-value="off" aria-pressed="false">关</button>
+				</div>
+				<div style="margin-top: 18px">
+					<button class="btn big" id="btn-start">开始静坐</button>
+				</div>
+			</section>
+
+			<!-- 进行中 -->
+			<section class="card" id="game" hidden>
+				<div class="stage">
+					<div class="progress-track"><div class="progress-bar" id="progress"></div></div>
+					<div class="remain num" id="remain">05:00</div>
+					<div class="ball-wrap" id="ball-wrap">
+						<div class="count-in num" id="count-in" hidden></div>
+						<div class="ball" id="ball" hidden></div>
+						<div class="breath-word" id="breath-word" hidden>吸</div>
+					</div>
+				</div>
+				<div style="text-align: center; margin-top: 6px">
+					<button class="btn ghost" id="btn-abort">结束本次</button>
+				</div>
+			</section>
+
+			<!-- 结果 -->
+			<section class="card" id="result" hidden>
+				<h2>本次记录</h2>
+				<div class="result-num num" id="r-min">0 分钟</div>
+				<p class="result-line num" id="r-detail"></p>
+				<p class="hint">已写入本地记录。</p>
+				<div style="display: flex; gap: 10px">
+					<button class="btn" id="btn-again">再来一次</button>
+					<a class="btn ghost" href="/stats/" style="text-decoration: none; text-align: center">看统计</a>
+				</div>
+			</section>
+		</main>
+
+		<script type="module" src="/assets/js/meditation/session.js"></script>
+	</body>
+</html>

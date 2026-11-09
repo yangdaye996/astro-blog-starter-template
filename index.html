@@ -1,0 +1,67 @@
+<!doctype html>
+<html class="no-js" lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>心智训练站</title>
+		<meta name="description" content="心算、N-back、冥想——每天练一练的认知训练台。记录存本地浏览器。" />
+		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+		<link rel="stylesheet" href="/assets/css/base.css" />
+		<script>
+			document.documentElement.classList.remove('no-js');
+		</script>
+	</head>
+	<body>
+		<header class="topbar">
+			<nav class="nav">
+				<a class="brand" href="/">心智训练站</a>
+				<a href="/" aria-current="page">首页</a>
+				<a href="/math/">心算</a>
+				<a href="/nback/">N-back</a>
+				<a href="/meditation/">冥想</a>
+				<a href="/stats/">统计</a>
+			</nav>
+		</header>
+
+		<main class="container">
+			<div class="page-head">
+				<h1>心智训练站</h1>
+				<p class="sub">三件事，每天练一练。记录只存在你这台浏览器里。</p>
+			</div>
+
+			<!-- 连续与总量摘要，home.js 现算填充；无 JS 时不显示 -->
+			<p class="num" id="summary" style="color: var(--ink-2); font-size: 15px; margin: 0" hidden></p>
+
+			<div class="entry-grid">
+				<a class="entry-card" href="/math/">
+					<div class="icon">🧮</div>
+					<div class="name">心算</div>
+					<div class="desc">限时冲刺，档位内答对尽可能多的题。</div>
+					<span class="badge" data-badge="math">今日未练</span>
+				</a>
+				<a class="entry-card" href="/nback/">
+					<div class="icon">🔲</div>
+					<div class="name">N-back</div>
+					<div class="desc">网格位置记忆，工作硬骨头。</div>
+					<span class="badge" data-badge="nback">今日未练</span>
+				</a>
+				<a class="entry-card" href="/meditation/">
+					<div class="icon">🧘</div>
+					<div class="name">冥想</div>
+					<div class="desc">静坐计时，结束时一声钟。</div>
+					<span class="badge" data-badge="meditation">今日未练</span>
+				</a>
+			</div>
+
+			<div class="card">
+				<h2>记录说明</h2>
+				<p style="margin: 0; color: var(--ink-2); font-size: 14.5px">
+					每次训练结束自动写入浏览器本地存储（localStorage）。换浏览器、清站点数据都会丢记录——去
+					<a href="/stats/">统计页</a> 导出 JSON 备份。
+				</p>
+			</div>
+		</main>
+
+		<script type="module" src="/assets/js/home.js"></script>
+	</body>
+</html>

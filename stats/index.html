@@ -1,0 +1,118 @@
+<!doctype html>
+<html class="no-js" lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>训练统计 · 心智训练站</title>
+		<meta name="description" content="训练记录总览：连续天数、每模块趋势曲线、会话明细与导出备份。" />
+		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+		<link rel="stylesheet" href="/assets/css/base.css" />
+		<script>
+			document.documentElement.classList.remove('no-js');
+		</script>
+		<style>
+			/* ---------- 统计页专属 ---------- */
+			.trend-block {
+				margin: 18px 0;
+			}
+			.trend-block h3 {
+				margin: 0 0 6px;
+				font-size: 15px;
+			}
+			.trend-block h3 .metric {
+				color: var(--ink-3);
+				font-weight: 500;
+				font-size: 13px;
+			}
+			.trend-svg {
+				width: 100%;
+				height: auto;
+				display: block;
+			}
+			.secs {
+				font-size: 14px;
+				color: var(--ink-2);
+			}
+			.secs td,
+			.secs th {
+				text-align: left;
+				padding: 8px 10px;
+				border-bottom: 1px solid var(--line);
+			}
+			.secs th {
+				color: var(--ink-3);
+				font-weight: 500;
+				font-size: 12.5px;
+			}
+			.secs td.num {
+				color: var(--ink-2);
+			}
+		</style>
+	</head>
+	<body>
+		<header class="topbar">
+			<nav class="nav">
+				<a class="brand" href="/">心智训练站</a>
+				<a href="/">首页</a>
+				<a href="/math/">心算</a>
+				<a href="/nback/">N-back</a>
+				<a href="/meditation/">冥想</a>
+				<a href="/stats/" aria-current="page">统计</a>
+			</nav>
+		</header>
+
+		<main class="container">
+			<div class="page-head">
+				<h1>训练统计</h1>
+				<p class="sub">数据只存在本浏览器。清站点数据前先导出备份。</p>
+			</div>
+
+			<div class="stat-row">
+				<div class="stat-card"><div class="value num" id="s-total">0</div><div class="label">总次数</div></div>
+				<div class="stat-card"><div class="value num" id="s-streak">0</div><div class="label">连续天数</div></div>
+				<div class="stat-card"><div class="value num" id="s-week">0</div><div class="label">本周</div></div>
+			</div>
+
+			<section class="card">
+				<h2>趋势（近 30 次）</h2>
+				<div class="trend-block">
+					<h3>心算 <span class="metric">· 答对题数</span></h3>
+					<div id="trend-math"></div>
+				</div>
+				<div class="trend-block">
+					<h3>N-back <span class="metric">· 准确率 %</span></h3>
+					<div id="trend-nback"></div>
+				</div>
+				<div class="trend-block">
+					<h3>冥想 <span class="metric">· 实际时长（分钟）</span></h3>
+					<div id="trend-meditation"></div>
+				</div>
+			</section>
+
+			<section class="card">
+				<h2>会话明细</h2>
+				<table class="secs num" style="width: 100%; border-collapse: collapse">
+					<thead>
+						<tr><th>时间</th><th>模块</th><th>参数</th><th>成绩</th></tr>
+					</thead>
+					<tbody id="log-body"></tbody>
+				</table>
+				<div class="empty" id="log-empty" hidden>
+					<div class="big">🌱</div>
+					还没有任何训练记录。先去<a href="/math/">心算</a>、<a href="/nback/">N-back</a> 或
+					<a href="/meditation/">冥想</a>练一轮，这里就会有东西了。
+				</div>
+			</section>
+
+			<section class="card">
+				<h2>备份</h2>
+				<p style="margin: 0 0 14px; color: var(--ink-2); font-size: 14.5px">
+					localStorage 是记录的唯一真源，清浏览器数据 = 全丢。定期导出 JSON 存档。
+				</p>
+				<button class="btn" id="btn-export">导出 JSON 备份</button>
+			</section>
+		</main>
+
+		<script type="module" src="/assets/js/stats/page.js"></script>
+	</body>
+</html>
