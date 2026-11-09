@@ -18,7 +18,7 @@
 				padding: 10px 0 6px;
 			}
 			.progress-track {
-				height: 4px;
+				height: 3px;
 				border-radius: 999px;
 				background: var(--surface-2);
 				overflow: hidden;
@@ -31,29 +31,64 @@
 				transition: width 0.3s linear;
 			}
 			.remain {
-				font-size: 56px;
+				font-size: 64px;
 				font-weight: 800;
 				color: var(--ink);
 				margin: 10px 0 4px;
+				line-height: 1;
 			}
 			.ball-wrap {
-				height: 220px;
+				height: 250px;
 				display: flex;
 				flex-direction: column;
 				align-items: center;
 				justify-content: center;
-				gap: 14px;
+				gap: 16px;
 			}
+			/* 呼吸球 = 水墨晕染的圆，随呼吸涨落（渐变仅此处使用） */
 			.ball {
-				width: 120px;
-				height: 120px;
+				position: relative;
+				width: 150px;
+				height: 150px;
 				border-radius: 50%;
-				background: radial-gradient(circle at 35% 30%, var(--accent), var(--accent-strong));
+				background: radial-gradient(
+					circle at 50% 44%,
+					rgb(32 38 58 / 0.88) 0%,
+					rgb(32 38 58 / 0.64) 55%,
+					rgb(32 38 58 / 0.1) 78%,
+					transparent 82%
+				);
 				animation: breathe 8s ease-in-out infinite;
 				will-change: transform;
 			}
-			.ball.paused {
-				animation-play-state: paused;
+			/* 涟漪：墨圈随吸气外扩再淡去，一圈比一圈轻 */
+			.ball::before,
+			.ball::after {
+				content: "";
+				position: absolute;
+				inset: 0;
+				border-radius: 50%;
+				border: 1.5px solid rgb(32 38 58 / 0.26);
+				pointer-events: none;
+				animation: ripple 8s ease-out infinite;
+			}
+			.ball::after {
+				animation-delay: 4s;
+				border-color: rgb(44 67 196 / 0.2);
+			}
+			@keyframes ripple {
+				0% {
+					transform: scale(0.55);
+					opacity: 0;
+				}
+				25% {
+					opacity: 0.9;
+				}
+				55%,
+				100% {
+					transform: scale(1.4);
+					opacity: 0;
+				}
 			}
 			@keyframes breathe {
 				0% {
@@ -67,20 +102,29 @@
 				}
 			}
 			.breath-word {
-				font-size: 20px;
+				font-size: 22px;
 				font-weight: 700;
 				color: var(--accent);
-				letter-spacing: 0.2em;
+				letter-spacing: 0.3em;
+				text-indent: 0.3em; /* 抵消末字间距，视觉居中 */
 			}
 			.count-in {
-				font-size: 72px;
+				font-size: 80px;
 				font-weight: 800;
 				color: var(--accent);
+				line-height: 1;
 			}
 			.result-num {
 				font-size: 44px;
 				font-weight: 800;
 				color: var(--accent);
+			}
+			@media (prefers-reduced-motion: reduce) {
+				.ball,
+				.ball::before,
+				.ball::after {
+					animation: none;
+				}
 			}
 		</style>
 	</head>
@@ -98,6 +142,11 @@
 
 		<main class="container">
 			<div class="page-head">
+				<span class="wm" aria-hidden="true">
+					<svg viewBox="0 0 24 24" fill="none">
+						<circle cx="12" cy="12" r="8.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-dasharray="44 10" transform="rotate(-55 12 12)" />
+					</svg>
+				</span>
 				<h1>冥想</h1>
 				<p class="sub">静坐计时，结束时一声钟。可开呼吸引导。</p>
 			</div>
@@ -125,7 +174,7 @@
 			</section>
 
 			<!-- 进行中 -->
-			<section class="card" id="game" hidden>
+			<section class="card board" id="game" hidden>
 				<div class="stage">
 					<div class="progress-track"><div class="progress-bar" id="progress"></div></div>
 					<div class="remain num" id="remain">05:00</div>

@@ -18,34 +18,36 @@
 				justify-content: space-between;
 			}
 			.nflag {
-				font-size: 15px;
-				font-weight: 700;
+				font-size: 24px;
+				font-weight: 800;
 				color: var(--accent);
+				line-height: 1;
 			}
 			.progress-line {
 				color: var(--ink-3);
-				font-size: 14px;
+				font-size: 15px;
+				font-weight: 600;
 			}
 			.grid {
 				display: grid;
 				grid-template-columns: repeat(3, 1fr);
 				gap: 10px;
-				max-width: 320px;
-				margin: 22px auto;
+				max-width: 340px;
+				margin: 26px auto;
 			}
+			/* 格子 = 纸上白瓦，亮起 = 滴进一格墨 */
 			.cell {
 				aspect-ratio: 1;
 				border-radius: var(--radius-s);
-				background: var(--surface-2);
+				background: var(--surface);
 				border: 1px solid var(--line);
 				transition: background 0.1s;
 			}
 			.cell.lit {
-				background: var(--accent);
-				border-color: var(--accent);
-				box-shadow: 0 0 0 4px var(--accent-soft);
+				background: var(--ink);
+				border-color: var(--ink);
 			}
-			/* 按键判定闪色：盖满全盘软色， stimulus 已灭时也能看见反馈 */
+			/* 按键判定闪色：盖满全盘软色，stimulus 已灭时也能看见反馈 */
 			.grid.judge-ok .cell {
 				background: var(--good-soft);
 				border-color: var(--good);
@@ -56,17 +58,15 @@
 			}
 			.grid.judge-ok .cell.lit {
 				background: var(--good);
-				box-shadow: 0 0 0 4px var(--good-soft);
 			}
 			.grid.judge-bad .cell.lit {
 				background: var(--bad);
-				box-shadow: 0 0 0 4px var(--bad-soft);
 			}
 			.match-note {
 				text-align: center;
 				color: var(--ink-3);
 				font-size: 13.5px;
-				margin: 6px 0 14px;
+				margin: 6px 0 16px;
 			}
 			.result-grid {
 				display: grid;
@@ -76,7 +76,7 @@
 				text-align: center;
 			}
 			.result-grid .v {
-				font-size: 24px;
+				font-size: 26px;
 				font-weight: 800;
 				color: var(--ink);
 			}
@@ -103,6 +103,21 @@
 
 		<main class="container">
 			<div class="page-head">
+				<span class="wm" aria-hidden="true">
+					<svg viewBox="0 0 24 24" fill="none">
+						<g stroke="currentColor" stroke-width="1.2">
+							<rect x="2.5" y="2.5" width="4.6" height="4.6" rx="1.3" />
+							<rect x="9.7" y="2.5" width="4.6" height="4.6" rx="1.3" />
+							<rect x="16.9" y="2.5" width="4.6" height="4.6" rx="1.3" />
+							<rect x="2.5" y="9.7" width="4.6" height="4.6" rx="1.3" />
+							<rect x="16.9" y="9.7" width="4.6" height="4.6" rx="1.3" />
+							<rect x="2.5" y="16.9" width="4.6" height="4.6" rx="1.3" />
+							<rect x="9.7" y="16.9" width="4.6" height="4.6" rx="1.3" />
+							<rect x="16.9" y="16.9" width="4.6" height="4.6" rx="1.3" />
+						</g>
+						<rect x="9.7" y="9.7" width="4.6" height="4.6" rx="1.3" fill="currentColor" />
+					</svg>
+				</span>
 				<h1>N-back</h1>
 				<p class="sub">单位置记忆：亮起的位置与 n 步前相同时按空格，不同就不按。</p>
 			</div>
@@ -127,7 +142,7 @@
 			</section>
 
 			<!-- 训练进行中 -->
-			<section class="card" id="game" hidden>
+			<section class="card board" id="game" hidden>
 				<div class="game-top">
 					<span class="nflag num" id="nflag"></span>
 					<span class="progress-line num" id="progress"></span>

@@ -18,33 +18,54 @@
 				justify-content: space-between;
 			}
 			.timer {
-				font-size: 40px;
+				font-size: 56px;
 				font-weight: 800;
-				color: var(--accent);
+				color: var(--ink);
+				line-height: 1;
 			}
 			.timer.low {
 				color: var(--bad);
 			}
+			/* 剩余时间进度线：秒数越少墨线越短，临 10 秒转红 */
+			.time-track {
+				height: 3px;
+				background: var(--surface-2);
+				border-radius: 999px;
+				overflow: hidden;
+				margin: 10px 0 4px;
+			}
+			.time-bar {
+				height: 100%;
+				width: 100%;
+				background: var(--accent);
+				transition: width 0.3s linear;
+			}
+			.time-bar.low {
+				background: var(--bad);
+			}
 			.progress-line {
 				color: var(--ink-3);
-				font-size: 14px;
+				font-size: 15px;
+				font-weight: 600;
 			}
 			.question {
 				text-align: center;
-				font-size: 52px;
-				font-weight: 800;
-				margin: 26px 0 6px;
+				font-size: 60px;
+				font-weight: 900;
+				margin: 30px 0 6px;
 				letter-spacing: 0.04em;
+				line-height: 1.15;
 			}
+			/* 作答 = 纸上一条墨线，答在墨线上 */
 			.entry-line {
 				text-align: center;
 				font-size: 34px;
 				font-weight: 700;
 				color: var(--ink-2);
 				min-height: 52px;
-				border-bottom: 2px solid var(--line);
-				max-width: 220px;
-				margin: 0 auto 8px;
+				border-bottom: 2px solid var(--ink);
+				width: 7ch;
+				margin: 0 auto 10px;
 			}
 			.feedback {
 				text-align: center;
@@ -62,21 +83,27 @@
 				display: grid;
 				grid-template-columns: repeat(3, 1fr);
 				gap: 10px;
-				max-width: 320px;
-				margin: 18px auto 0;
+				max-width: 330px;
+				margin: 16px auto 0;
 			}
 			.keypad button {
 				font: inherit;
 				font-size: 21px;
 				font-weight: 600;
-				padding: 15px 0;
+				padding: 14px 0;
 				border-radius: var(--radius-s);
 				border: 1px solid var(--line);
 				background: var(--surface);
 				color: var(--ink);
 				cursor: pointer;
+				font-variant-numeric: tabular-nums;
+				transition: border-color 0.15s;
+			}
+			.keypad button:hover {
+				border-color: var(--ink-3);
 			}
 			.keypad button:active {
+				transform: translateY(1px);
 				background: var(--surface-2);
 			}
 			.keypad button.wide {
@@ -84,10 +111,29 @@
 				background: var(--accent);
 				border-color: var(--accent);
 				color: #fff;
+				font-size: 16px;
 			}
 			.keypad button:disabled {
 				opacity: 0.5;
 				cursor: not-allowed;
+			}
+			/* 物理键盘提示：键帽样式 */
+			.kbd-hint {
+				text-align: center;
+				color: var(--ink-3);
+				font-size: 13px;
+				margin: 14px 0 0;
+			}
+			.kbd-hint kbd {
+				font-family: inherit;
+				font-size: 12px;
+				padding: 0 6px;
+				margin: 0 1px;
+				border: 1px solid var(--line);
+				border-bottom-width: 2px;
+				border-radius: 4px;
+				background: var(--surface);
+				color: var(--ink-2);
 			}
 			.result-num {
 				font-size: 44px;
@@ -114,6 +160,12 @@
 
 		<main class="container">
 			<div class="page-head">
+				<span class="wm" aria-hidden="true">
+					<svg viewBox="0 0 24 24" fill="none">
+						<rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" stroke-width="1.4" />
+						<path d="M8.5 8.5l7 7M15.5 8.5l-7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+					</svg>
+				</span>
 				<h1>心算</h1>
 				<p class="sub">限时冲刺：倒计时内键入答案，答对尽可能多。</p>
 			</div>
@@ -136,17 +188,19 @@
 					<button data-value="120" aria-pressed="false">120 秒</button>
 				</div>
 				<div class="seg-title">题型随档位升级：L1 两位×一位 → L2 两位×两位（积三位）→ L3 两位×两位（积四位）</div>
+				<p class="hint">开始后可直接用物理键盘作答：数字键输入，回车提交，不必点屏上键盘。</p>
 				<div style="margin-top: 18px">
 					<button class="btn big" id="btn-start">开始训练</button>
 				</div>
 			</section>
 
 			<!-- 训练进行中 -->
-			<section class="card" id="game" hidden>
+			<section class="card board" id="game" hidden>
 				<div class="game-top">
 					<span class="timer num" id="timer">60</span>
 					<span class="progress-line num" id="progress">第 1 题</span>
 				</div>
+				<div class="time-track"><div class="time-bar" id="time-bar"></div></div>
 				<div class="question num" id="question"></div>
 				<div class="entry-line num" id="entry"></div>
 				<div class="feedback" id="feedback"></div>
@@ -165,6 +219,9 @@
 					<button data-key="back">退格</button>
 					<button class="wide" data-key="submit">提交（回车）</button>
 				</div>
+				<p class="kbd-hint">
+					<kbd>0</kbd>–<kbd>9</kbd> 输入 · <kbd>Enter</kbd> 提交 · <kbd>Backspace</kbd> 退格 · <kbd>S</kbd> 跳过
+				</p>
 			</section>
 
 			<!-- 结果 -->

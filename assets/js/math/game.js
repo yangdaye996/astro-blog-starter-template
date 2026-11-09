@@ -75,6 +75,10 @@ function renderTimer() {
 	const el = $('timer');
 	el.textContent = remain;
 	el.classList.toggle('low', remain <= 10);
+	// 剩余时间进度线：随秒数变短，临 10 秒转红（与 timer.low 同步）
+	const bar = $('time-bar');
+	bar.style.width = `${(remain / seconds) * 100}%`;
+	bar.classList.toggle('low', remain <= 10);
 }
 
 function renderEntry() {
@@ -184,13 +188,19 @@ $('btn-start').addEventListener('click', start);
 $('btn-again').addEventListener('click', start);
 $('keypad').addEventListener('click', (e) => {
 	const btn = e.target.closest('button[data-key]');
-	if (btn) onKey(btn.dataset.key);
+	if (btn) {
+		btn.blur(); // 点完即失焦：回车才不会误触发聚焦的屏上按键
+		onKey(btn.dataset.key);
+	}
 });
 
-// 物理键盘：数字键入、退格改正、回车提交
+// 物理键盘：数字键入、退格改正、回车提交、S 跳过（输入法组字期不响应）
 document.addEventListener('keydown', (e) => {
-	if (!running || gameEl.hidden) return;
+	if (!running || gameEl.hidden || e.isComposing) return;
 	if (e.key >= '0' && e.key <= '9') onKey(e.key);
 	else if (e.key === 'Backspace') onKey('back');
-	else if (e.key === 'Enter') onKey('submit');
+	else if (e.key === 'Enter') {
+		e.preventDefault();
+		onKey('submit');
+	} else if (e.key === 's' || e.key === 'S') onKey('skip');
 });

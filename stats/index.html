@@ -24,6 +24,17 @@
 				font-weight: 500;
 				font-size: 13px;
 			}
+			/* 趋势图坐在点阵方格纸上：像手绘统计图 */
+			#trend-math,
+			#trend-nback,
+			#trend-meditation {
+				background-color: var(--surface);
+				background-image: radial-gradient(var(--dot) 1px, transparent 1.2px);
+				background-size: 18px 18px;
+				border: 1px solid var(--line);
+				border-radius: var(--radius-s);
+				padding: 8px;
+			}
 			.trend-svg {
 				width: 100%;
 				height: auto;
@@ -63,14 +74,19 @@
 
 		<main class="container">
 			<div class="page-head">
+				<span class="wm" aria-hidden="true">
+					<svg viewBox="0 0 24 24" fill="none">
+						<path d="M3 17l4-5 3 2 5-7 6 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+					</svg>
+				</span>
 				<h1>训练统计</h1>
 				<p class="sub">数据只存在本浏览器。清站点数据前先导出备份。</p>
 			</div>
 
 			<div class="stat-row">
-				<div class="stat-card"><div class="value num" id="s-total">0</div><div class="label">总次数</div></div>
-				<div class="stat-card"><div class="value num" id="s-streak">0</div><div class="label">连续天数</div></div>
-				<div class="stat-card"><div class="value num" id="s-week">0</div><div class="label">本周</div></div>
+				<div class="stat-cell"><div class="value num" id="s-total">0</div><div class="label">总次数</div></div>
+				<div class="stat-cell"><div class="value hot num" id="s-streak">0</div><div class="label">连续天数</div></div>
+				<div class="stat-cell"><div class="value num" id="s-week">0</div><div class="label">本周</div></div>
 			</div>
 
 			<section class="card">
@@ -98,7 +114,6 @@
 					<tbody id="log-body"></tbody>
 				</table>
 				<div class="empty" id="log-empty" hidden>
-					<div class="big">🌱</div>
 					还没有任何训练记录。先去<a href="/math/">心算</a>、<a href="/nback/">N-back</a> 或
 					<a href="/meditation/">冥想</a>练一轮，这里就会有东西了。
 				</div>

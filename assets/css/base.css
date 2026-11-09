@@ -1,5 +1,5 @@
 /* ============================================================
-   训练台 · 共享样式与设计令牌（ADR-0014）
+   训练台 · 共享样式与设计令牌（ADR-0014 ·「墨与纸」修订）
    令牌唯一源：本文件 :root，每个令牌只有一组值，只做浅色单主题。
    模块专属样式写在各页 <style> 里；跨页复用的组件一律放这里。
    陷阱（继承旧教训）：设置了 display 的类会盖掉 UA 的
@@ -7,27 +7,29 @@
    ============================================================ */
 
 :root {
-	/* 色板：中性色浅淡让位盘面，强调色饱满支撑状态反馈 */
-	--bg: #f4f6fa;
-	--surface: #ffffff;
-	--surface-2: #eef1f7;
-	--ink: #182031;
-	--ink-2: #5b6578;
-	--ink-3: #9aa3b5;
-	--line: #dfe4ee;
-	--accent: #3f51f5;
-	--accent-strong: #2f3fd0;
-	--accent-soft: #e6e9fe;
-	--good: #16a34a;
-	--good-soft: #dcfce7;
-	--bad: #dc2626;
-	--bad-soft: #fee2e2;
-	--gold: #d97706;
+	/* 色板：纸面底、蓝黑墨字、群青墨水强调；红绿严格只做对错 */
+	--bg: #f6f5f0;
+	--surface: #fffef9;
+	--surface-2: #edece4;
+	--ink: #20263a;
+	--ink-2: #565e73;
+	--ink-3: #6f7789;
+	--line: #dfdccf;
+	--accent: #2c43c4;
+	--accent-strong: #20339e;
+	--accent-soft: #e7eaf9;
+	--good: #1e7a44;
+	--good-soft: #dcf0e3;
+	--bad: #c03434;
+	--bad-soft: #fae3e0;
 
-	/* 形状与层次 */
-	--radius: 14px;
-	--radius-s: 9px;
-	--shadow: 0 1px 2px rgb(24 32 49 / 0.05), 0 4px 16px rgb(24 32 49 / 0.06);
+	/* 点阵纸纹：训练盘面与趋势图的底子 */
+	--dot: rgb(32 38 58 / 0.07);
+
+	/* 形状与层次：描边承担层次，阴影近乎归零 */
+	--radius: 8px;
+	--radius-s: 5px;
+	--shadow: 0 1px 2px rgb(32 38 58 / 0.05);
 
 	/* 字体：系统栈零依赖（ADR-0014，废除字体子集） */
 	--font:
@@ -49,7 +51,19 @@ body {
 	color: var(--ink);
 	font-family: var(--font);
 	font-size: 16px;
-	line-height: 1.6;
+	line-height: 1.65;
+}
+
+/* 正文链接：群青墨色，下划线稍偏下 */
+a {
+	color: var(--accent-strong);
+	text-underline-offset: 3px;
+}
+
+/* 键盘可达性：焦点环统一群青 */
+:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 2px;
 }
 
 .container {
@@ -63,13 +77,13 @@ body {
 	font-variant-numeric: tabular-nums;
 }
 
-/* ---------- 顶栏导航 ---------- */
+/* ---------- 顶栏导航：纸面上一行字，当前页墨线下划 ---------- */
 
 .topbar {
 	position: sticky;
 	top: 0;
 	z-index: 10;
-	background: rgb(255 255 255 / 0.92);
+	background: rgb(255 254 249 / 0.92);
 	backdrop-filter: blur(8px);
 	border-bottom: 1px solid var(--line);
 }
@@ -77,20 +91,33 @@ body {
 .nav {
 	display: flex;
 	align-items: center;
-	gap: 6px;
+	gap: 4px;
 	flex-wrap: wrap;
 	max-width: 760px;
 	margin-inline: auto;
 	padding: 10px 20px;
 }
 
+/* 品牌：墨字 + 群青小印 */
 .brand {
 	font-weight: 800;
 	font-size: 17px;
-	color: var(--accent);
+	color: var(--ink);
 	text-decoration: none;
-	margin-right: 12px;
+	margin-right: 14px;
 	letter-spacing: 0.02em;
+	display: inline-flex;
+	align-items: center;
+}
+
+.brand::before {
+	content: "";
+	width: 9px;
+	height: 9px;
+	margin-right: 8px;
+	background: var(--accent);
+	border-radius: 2px;
+	transform: rotate(45deg);
 }
 
 .nav a {
@@ -98,30 +125,31 @@ body {
 	text-decoration: none;
 	font-size: 15px;
 	padding: 5px 11px;
-	border-radius: 999px;
-	transition: background 0.15s, color 0.15s;
+	border-radius: var(--radius-s);
+	transition: color 0.15s;
 }
 
 .nav a:hover {
-	background: var(--surface-2);
 	color: var(--ink);
 }
 
 .nav a[aria-current="page"] {
-	background: var(--accent);
-	color: #fff;
-	font-weight: 600;
+	color: var(--ink);
+	font-weight: 700;
+	box-shadow: inset 0 -2.5px 0 var(--accent);
 }
 
-/* ---------- 页头 ---------- */
+/* ---------- 页头：可带模块水印（.wm 由各页提供图形）---------- */
 
 .page-head {
+	position: relative;
 	margin: 28px 0 20px;
 }
 
 .page-head h1 {
 	margin: 0 0 4px;
-	font-size: 28px;
+	font-size: 27px;
+	font-weight: 800;
 	letter-spacing: 0.01em;
 }
 
@@ -131,14 +159,37 @@ body {
 	font-size: 15px;
 }
 
-/* ---------- 卡片 ---------- */
+/* 页眉右侧水墨水印：各页塞自己的模块 SVG，淡到只当纸纹 */
+.page-head .wm {
+	position: absolute;
+	right: 0;
+	top: -6px;
+	width: 110px;
+	height: 110px;
+	opacity: 0.06;
+	pointer-events: none;
+}
+
+.page-head .wm svg {
+	width: 100%;
+	height: 100%;
+}
+
+@media (max-width: 560px) {
+	.page-head .wm {
+		width: 76px;
+		height: 76px;
+	}
+}
+
+/* ---------- 卡片：册页白 + 纸纹线描边 ---------- */
 
 .card {
 	background: var(--surface);
 	border: 1px solid var(--line);
 	border-radius: var(--radius);
 	box-shadow: var(--shadow);
-	padding: 20px;
+	padding: 22px;
 	margin: 16px 0;
 }
 
@@ -153,7 +204,29 @@ body {
 	margin-top: 10px;
 }
 
-/* 首页模块入口卡片 */
+/* 训练盘面：点阵纸 + 墨框 =「开考」信号，入场一次淡入 */
+.card.board {
+	border: 1.5px solid var(--ink);
+	background-color: var(--surface);
+	background-image: radial-gradient(var(--dot) 1px, transparent 1.2px);
+	background-size: 22px 22px;
+	background-position: 11px 11px;
+	animation: board-in 220ms ease-out;
+}
+
+@keyframes board-in {
+	from {
+		opacity: 0;
+		transform: translateY(6px);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+/* ---------- 首页模块入口：练习册封面卡 ---------- */
+
 .entry-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -165,6 +238,7 @@ body {
 	display: block;
 	background: var(--surface);
 	border: 1px solid var(--line);
+	border-top: 3px solid var(--ink);
 	border-radius: var(--radius);
 	box-shadow: var(--shadow);
 	padding: 18px;
@@ -175,18 +249,20 @@ body {
 
 .entry-card:hover {
 	transform: translateY(-2px);
-	border-color: var(--accent);
+	border-color: var(--ink);
 }
 
 .entry-card .icon {
-	font-size: 30px;
-	line-height: 1;
+	width: 27px;
+	height: 27px;
+	margin: 1px 0 10px;
+	display: block;
 }
 
 .entry-card .name {
 	font-size: 18px;
 	font-weight: 700;
-	margin: 8px 0 2px;
+	margin: 0 0 2px;
 }
 
 .entry-card .desc {
@@ -194,54 +270,67 @@ body {
 	color: var(--ink-2);
 }
 
-/* 今日状态徽标 */
+/* 今日状态徽标：未练 = 纸纹线小签，已练 = 绿墨印章 */
 .badge {
 	display: inline-block;
-	margin-top: 10px;
+	margin-top: 11px;
 	font-size: 12.5px;
-	padding: 3px 10px;
-	border-radius: 999px;
-	background: var(--surface-2);
-	color: var(--ink-2);
+	padding: 1px 9px;
+	border-radius: 3px;
+	border: 1px solid var(--line);
+	color: var(--ink-3);
+	letter-spacing: 0.06em;
 }
 
 .badge.done {
-	background: var(--good-soft);
+	border: 1.5px solid var(--good);
 	color: var(--good);
 	font-weight: 600;
+	letter-spacing: 0.08em;
+	transform: rotate(-2deg);
 }
 
-/* ---------- 统计总览卡 ---------- */
+/* ---------- 统计总览：一张成绩单，竖线分栏 ---------- */
 
 .stat-row {
 	display: grid;
 	grid-template-columns: repeat(3, 1fr);
-	gap: 12px;
-	margin: 18px 0;
-}
-
-.stat-card {
 	background: var(--surface);
 	border: 1px solid var(--line);
 	border-radius: var(--radius);
 	box-shadow: var(--shadow);
-	padding: 16px 18px;
-	text-align: center;
+	margin: 18px 0;
+	overflow: hidden;
 }
 
-.stat-card .value {
-	font-size: 30px;
+.stat-cell {
+	padding: 16px 8px;
+	text-align: center;
+	border-left: 1px solid var(--line);
+}
+
+.stat-cell:first-child {
+	border-left: none;
+}
+
+.stat-cell .value {
+	font-size: 32px;
 	font-weight: 800;
+	color: var(--ink);
+	line-height: 1.2;
+}
+
+.stat-cell .value.hot {
 	color: var(--accent);
 }
 
-.stat-card .label {
+.stat-cell .label {
 	font-size: 13px;
-	color: var(--ink-2);
+	color: var(--ink-3);
 	margin-top: 2px;
 }
 
-/* ---------- 分段选择器（难度档 / 时长 / n 值）---------- */
+/* ---------- 分段选择器：答题卡「涂卡」---------- */
 
 .seg {
 	display: flex;
@@ -253,17 +342,17 @@ body {
 	font: inherit;
 	font-size: 15px;
 	padding: 9px 18px;
-	border-radius: 999px;
+	border-radius: var(--radius-s);
 	border: 1px solid var(--line);
 	background: var(--surface);
 	color: var(--ink-2);
 	cursor: pointer;
-	transition: all 0.15s;
+	transition: border-color 0.15s, color 0.15s;
 }
 
 .seg button:hover {
-	border-color: var(--accent);
-	color: var(--accent);
+	border-color: var(--ink-3);
+	color: var(--ink);
 }
 
 .seg button[aria-pressed="true"] {
@@ -289,22 +378,27 @@ body {
 	font: inherit;
 	font-size: 16px;
 	font-weight: 600;
-	padding: 12px 28px;
-	border-radius: var(--radius-s);
+	padding: 12px 26px;
+	border-radius: 6px;
 	border: none;
 	background: var(--accent);
 	color: #fff;
 	cursor: pointer;
-	transition: background 0.15s;
+	transition: background 0.15s, transform 0.15s;
 }
 
 .btn:hover {
 	background: var(--accent-strong);
 }
 
+.btn:active {
+	transform: translateY(1px);
+}
+
 .btn:disabled {
 	opacity: 0.45;
 	cursor: not-allowed;
+	transform: none;
 }
 
 .btn.ghost {
@@ -315,17 +409,9 @@ body {
 }
 
 .btn.ghost:hover {
-	border-color: var(--accent);
-	color: var(--accent);
+	border-color: var(--ink-3);
+	color: var(--ink);
 	background: var(--surface);
-}
-
-.btn.danger {
-	background: var(--bad);
-}
-
-.btn.danger:hover {
-	background: #b91c1c;
 }
 
 .btn.big {
@@ -374,8 +460,8 @@ body {
 .module-tag {
 	font-size: 12px;
 	font-weight: 600;
-	padding: 2px 8px;
-	border-radius: 999px;
+	padding: 2px 9px;
+	border-radius: 3px;
 	background: var(--accent-soft);
 	color: var(--accent-strong);
 	white-space: nowrap;
@@ -385,17 +471,12 @@ body {
 
 .empty {
 	text-align: center;
-	color: var(--ink-3);
+	color: var(--ink-2);
 	padding: 28px 16px;
 	font-size: 14.5px;
 	border: 1px dashed var(--line);
 	border-radius: var(--radius-s);
 	background: var(--surface-2);
-}
-
-.empty .big {
-	font-size: 26px;
-	margin-bottom: 6px;
 }
 
 /* ---------- JS 可用性提示（ADR-0014）---------- */
@@ -412,6 +493,21 @@ body {
 
 html.no-js .js-warn {
 	display: block;
+}
+
+/* ---------- 动效降级（ADR-0014：动效只答应用户动作）---------- */
+
+@media (prefers-reduced-motion: reduce) {
+	.card.board {
+		animation: none;
+	}
+
+	.entry-card,
+	.btn,
+	.seg button,
+	.nav a {
+		transition: none;
+	}
 }
 
 /* ---------- [hidden] 陷阱兜底（ADR-0014）---------- */
