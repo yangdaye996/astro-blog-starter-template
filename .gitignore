@@ -1,6 +1,5 @@
-# 依赖与本地状态
+# 依赖
 node_modules/
-.wrangler/
 
 # 系统与编辑器垃圾
 .DS_Store
@@ -12,7 +11,6 @@ desktop.ini
 
 # 环境变量与日志
 .env*
-.dev.vars*
 *.log
 
 # 导出备份的默认落点

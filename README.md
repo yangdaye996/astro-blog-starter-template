@@ -26,11 +26,13 @@ ES modules 不能用 `file://` 直开（CORS 拦截），必须走 HTTP——任
 ## 验证与部署
 
 ```bash
-npm run check      # wrangler deploy --dry-run
-npm run deploy     # 部署到 Cloudflare（assets-only Worker，免费额度）
+npm run check      # 全部站点 JS 语法检查（node --check）
+npm run dev        # 本地预览 http://localhost:4321
 ```
 
-首次部署：Cloudflare 登录后 `npx wrangler deploy`，Worker 名 `mind-gym`。没有 D1、没有 KV、没有 Access——没有什么要配的。站点排除清单见根目录 `.assetsignore`。
+**部署 = push 自动触发**（Cloudflare Workers Builds）：push 到 main 后，Cloudflare 构建机自动执行 `npx wrangler deploy`——wrangler 只在 Cloudflare 侧运行，仓库内零安装。Worker 身份由根目录 `wrangler.json` 定义（assets-only：无 main、无绑定、无 D1/KV），站点排除清单见 `.assetsignore`。
+
+控制台侧一次性配置：Workers & Pages → 该 Worker → Settings → Build → 连接 Git 仓库；Build command 留空（纯静态无构建），Deploy command 填 `npx wrangler deploy`。没有 D1、没有 KV、没有 Access——没有什么要配的。
 
 ## 数据与备份（重要）
 

@@ -7,8 +7,8 @@
 | 命令 | 作用 |
 | --- | --- |
 | `npm run dev` | 本地静态服务器（serve，端口 4321）。ES modules 不能 `file://` 直开，必须走 HTTP |
-| `npm run check` | **验证命令**：`wrangler deploy --dry-run`，改完代码跑这个 |
-| `npm run deploy` | 部署到 Cloudflare（assets-only Worker） |
+| `npm run check` | **验证命令**：全部站点 JS 语法检查（`scripts/check.mjs`，node --check），改完代码跑这个 |
+| `git push` | **部署**：push 到 main 触发 Cloudflare Workers Builds 自动部署（`npx wrangler deploy` 在 CF 构建机执行，本地无 wrangler） |
 
 没有构建、没有 tsc、没有测试框架。验证 = `npm run check` + 本地人工过一遍相关页面全流程。
 
@@ -40,8 +40,8 @@
 
 ## 故障排查
 
-- **`wrangler deploy` 日志「Read N files」虚高是正常现象**：那是 `.assetsignore` 过滤**前**的原始目录遍历计数（node_modules 一起计入）。真实排除清单用 `WRANGLER_LOG=debug npx wrangler deploy --dry-run 2>&1 | grep "Ignoring asset:"` 查看，别被吓到也别去改架构。
-- **别用 `wrangler dev` 预览本站**：assets 目录 = 仓库根，dev 会连自己的 `.wrangler` 状态一起监视，陷入「Reloading local server」死循环。本地预览一律 `npm run dev`（serve）。
+- **部署日志「Read N files」虚高是正常现象**：构建日志里那是 `.assetsignore` 过滤**前**的原始目录遍历计数（node_modules 一起计入），真实上传约 39 个站点文件。部署失败先看构建日志 deploy 阶段的真实报错。
+- **本地没有 wrangler，也不需要**：部署由 Cloudflare 构建机执行 `npx wrangler deploy`；预览一律 `npm run dev`（serve）。别在本地装回 wrangler 跑 dev——assets 目录 = 仓库根会连自身状态一起监视，陷入 reload 死循环。
 - 数据没变：先确认看的是同一台浏览器的同一个 profile（localStorage 不跨浏览器、不跨设备）。
 - 记录消失：大概率清过站点数据，无备份即无解（ADR-0012 风险条目）；有 JSON 备份可手动写回。
 - 404 页不生效：`wrangler.json` 的 `not_found_handling: "404-page"` 依赖根目录 `404.html`。

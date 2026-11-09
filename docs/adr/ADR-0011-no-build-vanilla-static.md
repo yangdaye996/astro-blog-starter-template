@@ -46,3 +46,7 @@ Cloudflare **assets-only Worker**：`wrangler.json` 删除 `main` 与 D1 绑定�
 - **无类型检查**：JS 裸奔，靠小模块、命名约定和浏览器控制台兜底。重构蓝图要求每个 JS 文件职责单一（store / stats / audio / 各页 game），控制单文件复杂度。
 - **无组件复用机制**：跨页面共享的只有 CSS 令牌与 `assets/js/` 下的共享 JS；HTML 结构靠约定保持一致（导航、卡片结构写死在各页）。
 - **新增功能成本反转**：过去加功能先想依赖，现在先想「原生能不能做」。原生做不了的（如复杂图表交互），要么降级需求要么重新开 ADR 引入依赖。
+
+## 修订（2026-11-09，同日）
+
+本地卸除 wrangler：部署改为 **push 触发的 Cloudflare Workers Builds**，`npx wrangler deploy` 由 Cloudflare 构建机执行；`wrangler.json` 与 `.assetsignore` 作为部署配置保留在仓库。`npm run check` 相应降级为纯 JS 语法检查（`node --check`，`scripts/check.mjs`），不再包含 deploy --dry-run；本地预览仅 `npx serve`。
