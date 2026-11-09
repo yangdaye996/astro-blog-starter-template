@@ -6,7 +6,8 @@
 	"scripts": {
 		"dev": "npx serve . -l 4321",
 		"check": "node scripts/check.mjs",
-		"build": "node scripts/check.mjs"
+		"build": "node scripts/check.mjs",
+		"deploy": "wrangler deploy"
 	},
 	"devDependencies": {
 		"serve": "^14.2.4"
