@@ -16,3 +16,6 @@ desktop.ini
 
 # 导出备份的默认落点
 content-export/
+
+# 部署期产物（Vercel 输出目录，由 scripts/vercel-build.mjs 生成，不入库）
+public/

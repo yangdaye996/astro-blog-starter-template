@@ -8,3 +8,7 @@ AGENTS.md
 README.md
 package.json
 package-lock.json
+scripts
+wrangler.json
+vercel.json
+public

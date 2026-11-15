@@ -10,7 +10,11 @@
 | `npm run check` | **验证命令**：全部站点 JS 语法检查（`scripts/check.mjs`，node --check），改完代码跑这个 |
 | `npm run build` | **空壳**：复用 check。纯静态站没有真实构建步骤，它存在只为满足工具契约（Cloudflare 部署管线的构建命令），本地不产生任何产物 |
 | `npm run deploy` | **空壳**：`npx --yes wrangler deploy`（`--yes` 让 CI 环境非交互装包）。本地无 wrangler，此命令仅在 Cloudflare 构建机可用 |
-| `git push` | **部署**：push 到 main 触发 Cloudflare Workers Builds 自动部署（构建机执行 `npx wrangler deploy`，本地无 wrangler） |
+| `git push` | **部署**：push 到 main 同时触发两条管线——Cloudflare Workers Builds（构建机执行 `npx wrangler deploy`，本地无 wrangler）+ Vercel 镜像部署（构建机执行 `vercel.json#buildCommand`） |
+
+## Vercel 镜像部署（第二平台）
+
+同一份 push 到 main 也会在 Vercel 构建机上跑 `vercel.json#buildCommand`：先 `npm run build`（语法检查），再 `scripts/vercel-build.mjs` 把站点文件**原样复制**进 `public/`（Vercel 对无框架静态站要求产物集中在单一输出目录；只复制不转换，不违背 ADR-0011）。排除清单唯一源仍是 `.assetsignore`。`public/` 是部署期产物，已进 `.gitignore`。Vercel 静态部署会自动把产物根下的 `404.html` 用作 404 页，与 Cloudflare 的 `not_found_handling` 等效。
 
 没有构建、没有 tsc、没有测试框架。验证 = `npm run check` + 本地人工过一遍相关页面全流程。
 
@@ -38,11 +42,12 @@
 - **每个列表类区块必须有空状态设计**（无数据给引导文案，不给空白）。
 - 记录备份：stats 页导出 JSON 是唯一备份手段，README 明示；导入（恢复）未立项。
 - 页面结构：`/math/`、`/nback/`、`/meditation/`、`/stats/` 各自 index.html。导航五链接写死在各页 HTML——无构建无组件复用，靠约定保持一致，新增页面记得同步全部页面。
-- 部署排除清单在根目录 `.assetsignore`（docs、node_modules、package 等不进站点）；新加非站点文件记得同步进去。
+- 部署排除清单在根目录 `.assetsignore`（docs、node_modules、package、scripts 等不进站点）；**Cloudflare 与 Vercel 两条管线共用它**——新增站点文件两平台自动带上，新增非站点文件记得同步进去。
 
 ## 故障排查
 
 - **部署日志「Read N files」虚高是正常现象**：构建日志里那是 `.assetsignore` 过滤**前**的原始目录遍历计数（node_modules 一起计入），真实上传约 39 个站点文件。部署失败先看构建日志 deploy 阶段的真实报错。
+- **Vercel 部署报 `STATIC_BUILD_NO_OUT_DIR`**：说明 `public/` 没生成——`vercel.json` 丢了，或 buildCommand 没跑到 `scripts/vercel-build.mjs`。Vercel 不认 `.assetsignore` 这个文件名，是靠复制脚本读它来实现同一份排除逻辑的。
 - **本地没有 wrangler，也不需要**：部署由 Cloudflare 构建机执行 `npx wrangler deploy`；预览一律 `npm run dev`（serve）。别在本地装回 wrangler 跑 dev——assets 目录 = 仓库根会连自身状态一起监视，陷入 reload 死循环。
 - 数据没变：先确认看的是同一台浏览器的同一个 profile（localStorage 不跨浏览器、不跨设备）。
 - 记录消失：大概率清过站点数据，无备份即无解（ADR-0012 风险条目）；有 JSON 备份可手动写回。

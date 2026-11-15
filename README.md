@@ -1,6 +1,6 @@
 # 心智训练站
 
-心算、N-back、冥想三大训练模块 + 统计页。纯静态无构建（ADR-0010/0011）：源码即产物，零运行时第三方依赖，部署为 Cloudflare assets-only Worker，训练记录存浏览器 localStorage（ADR-0012）。
+心算、N-back、冥想三大训练模块 + 统计页。纯静态无构建（ADR-0010/0011）：源码即产物，零运行时第三方依赖，部署为 Cloudflare assets-only Worker（Vercel 镜像同步部署），训练记录存浏览器 localStorage（ADR-0012）。
 
 > 前身是中文博客（Astro + D1 + 站内编辑），2026-11-09 换血转型（ADR-0010）；博客时代的决策存档于 `docs/adr/` 的 0001–0009。
 
@@ -33,6 +33,8 @@ npm run dev        # 本地预览 http://localhost:4321
 **部署 = push 自动触发**（Cloudflare Workers Builds）：push 到 main 后，Cloudflare 构建机自动执行 `npx wrangler deploy`——wrangler 只在 Cloudflare 侧运行，仓库内零安装。Worker 身份由根目录 `wrangler.json` 定义（assets-only：无 main、无绑定、无 D1/KV），站点排除清单见 `.assetsignore`。
 
 控制台侧一次性配置：Workers & Pages → 该 Worker → Settings → Build → 连接 Git 仓库；Build command 留空（纯静态无构建），Deploy command 填 `npx wrangler deploy`。没有 D1、没有 KV、没有 Access——没有什么要配的。
+
+**Vercel 镜像部署**：同一份 push 也会触发 Vercel 构建机执行根目录 `vercel.json#buildCommand`——语法检查后，`scripts/vercel-build.mjs` 按 `.assetsignore` 把站点文件原样复制进 `public/`（Vercel 要求的输出目录），零转换。`404.html` 由 Vercel 自动识别为 404 页。Vercel 控制台无需改任何设置（vercel.json 已覆盖构建命令与输出目录）。
 
 ## 数据与备份（重要）
 
