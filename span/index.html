@@ -1,0 +1,180 @@
+<!doctype html>
+<html class="no-js" lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>序列记忆 · 心智训练站</title>
+		<meta name="description" content="序列记忆广度训练：复现闪光顺序，一轮比一轮长。" />
+		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+		<link rel="stylesheet" href="/assets/css/base.css" />
+		<script>
+			document.documentElement.classList.remove('no-js');
+		</script>
+		<style>
+			/* ---------- 序列记忆专属 ---------- */
+			.span-grid {
+				display: grid;
+				grid-template-columns: repeat(3, 1fr);
+				gap: 12px;
+				max-width: 340px;
+				margin: 24px auto 10px;
+			}
+			.span-grid button {
+				aspect-ratio: 1;
+				border-radius: var(--radius-s);
+				border: 1px solid var(--line);
+				background: var(--surface);
+				cursor: pointer;
+				transition: background 0.1s, border-color 0.1s, transform 0.06s;
+			}
+			.span-grid button:disabled {
+				cursor: default;
+			}
+			.span-grid button.lit {
+				background: var(--mod);
+				border-color: var(--mod);
+				box-shadow: 0 0 0 4px color-mix(in srgb, var(--mod) 22%, transparent);
+			}
+			.span-grid button.ok {
+				background: var(--good);
+				border-color: var(--good);
+			}
+			.span-grid button.bad {
+				background: var(--bad);
+				border-color: var(--bad);
+			}
+			.span-grid button:not(:disabled):active {
+				transform: scale(0.95);
+			}
+			.phase-line {
+				text-align: center;
+				font-size: 17px;
+				font-weight: 700;
+				color: var(--mod);
+				margin: 6px 0 2px;
+				min-height: 1.5em;
+			}
+			.dots {
+				display: flex;
+				justify-content: center;
+				gap: 7px;
+				margin: 10px 0 4px;
+				min-height: 12px;
+			}
+			.dots span {
+				width: 11px;
+				height: 11px;
+				border-radius: 50%;
+				border: 2px solid var(--line-strong);
+				background: transparent;
+			}
+			.dots span.filled {
+				background: var(--mod);
+				border-color: var(--mod);
+			}
+		</style>
+	</head>
+	<body class="mod-span">
+		<header class="topbar">
+			<nav class="nav" aria-label="主导航">
+				<a class="brand" href="/">
+					<svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+						<circle cx="5" cy="7.5" r="2.7" fill="var(--m-math)" />
+						<circle cx="12" cy="7.5" r="2.7" fill="var(--m-schulte)" />
+						<circle cx="19" cy="7.5" r="2.7" fill="var(--m-span)" />
+						<circle cx="5" cy="16.5" r="2.7" fill="var(--m-nback)" />
+						<circle cx="12" cy="16.5" r="2.7" fill="var(--m-stroop)" />
+						<circle cx="19" cy="16.5" r="2.7" fill="var(--m-meditation)" />
+					</svg>
+					心智训练站
+				</a>
+				<div class="nav-links">
+					<a href="/">首页</a>
+					<a href="/math/">心算</a>
+					<a href="/nback/">N-back</a>
+					<a href="/schulte/">舒尔特</a>
+					<a href="/stroop/">色词</a>
+					<a href="/span/" aria-current="page">序列</a>
+					<a href="/meditation/">冥想</a>
+					<a href="/stats/">统计</a>
+				</div>
+				<button id="sound-toggle" class="sound-toggle" type="button" aria-pressed="true">
+					<svg class="i-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M4 9v6h4l5 4V5L8 9H4z" /><path d="M16.5 8.5a5 5 0 0 1 0 7" /><path d="M19 6a8.5 8.5 0 0 1 0 12" />
+					</svg>
+					<svg class="i-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M4 9v6h4l5 4V5L8 9H4z" /><path d="M17 9l4 6M21 9l-4 6" />
+					</svg>
+				</button>
+			</nav>
+		</header>
+
+		<main class="container">
+			<div class="page-head">
+				<span class="wm" aria-hidden="true">
+					<svg viewBox="0 0 24 24" fill="none">
+						<path d="M5 18L10 8l4 6 5-10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+						<circle cx="5" cy="18" r="2.2" fill="currentColor" />
+						<circle cx="10" cy="8" r="2.2" fill="currentColor" />
+						<circle cx="14" cy="14" r="2.2" fill="currentColor" />
+						<circle cx="19" cy="4" r="2.2" fill="currentColor" />
+					</svg>
+				</span>
+				<span class="ability-pill">记忆广度</span>
+				<h1>序列记忆</h1>
+				<p class="sub">瓦片按顺序闪光，看完后照着点一遍。每对一轮就加一格，点错即止。</p>
+			</div>
+
+			<div class="js-warn">序列记忆需要启用 JavaScript，否则无法训练。</div>
+
+			<!-- 开局配置 -->
+			<section class="card" id="setup">
+				<h2>选择起始长度</h2>
+				<div class="seg-title">起始长度（第一轮闪几格）</div>
+				<div class="seg" id="seg-start">
+					<button data-value="2" aria-pressed="true">2 格 标准</button>
+					<button data-value="3" aria-pressed="false">3 格 挑战</button>
+				</div>
+				<p class="hint">每对一轮，下一轮就多闪一格。能稳定复现的最长长度，就是你的记忆广度。</p>
+				<div style="margin-top: 18px">
+					<button class="btn big" id="btn-start">开始训练</button>
+				</div>
+			</section>
+
+			<!-- 训练进行中 -->
+			<section class="card board" id="game" hidden>
+				<div class="game-top">
+					<span class="progress-line num" id="round-info">第 1 轮</span>
+					<span class="progress-line num" id="len-info">长度 2</span>
+				</div>
+				<div class="span-grid" id="grid">
+					<button type="button" data-i="0" aria-label="瓦片 1"></button>
+					<button type="button" data-i="1" aria-label="瓦片 2"></button>
+					<button type="button" data-i="2" aria-label="瓦片 3"></button>
+					<button type="button" data-i="3" aria-label="瓦片 4"></button>
+					<button type="button" data-i="4" aria-label="瓦片 5"></button>
+					<button type="button" data-i="5" aria-label="瓦片 6"></button>
+					<button type="button" data-i="6" aria-label="瓦片 7"></button>
+					<button type="button" data-i="7" aria-label="瓦片 8"></button>
+					<button type="button" data-i="8" aria-label="瓦片 9"></button>
+				</div>
+				<p class="phase-line" id="phase">看好顺序</p>
+				<div class="dots" id="dots"></div>
+			</section>
+
+			<!-- 结果 -->
+			<section class="card" id="result" hidden>
+				<h2>本轮成绩</h2>
+				<div class="score num" id="r-span">0 格</div>
+				<p class="score-line num" id="r-detail"></p>
+				<p class="best-line" id="r-best"></p>
+				<div class="result-actions">
+					<button class="btn" id="btn-again">再来一轮</button>
+					<a class="btn ghost" href="/stats/">看统计</a>
+				</div>
+			</section>
+		</main>
+
+		<script type="module" src="/assets/js/span/game.js"></script>
+	</body>
+</html>

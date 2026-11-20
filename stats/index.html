@@ -4,7 +4,7 @@
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<title>训练统计 · 心智训练站</title>
-		<meta name="description" content="训练记录总览：连续天数、每模块趋势曲线、会话明细与导出备份。" />
+		<meta name="description" content="训练记录总览：连续天数、能力光谱、每模块趋势曲线、会话明细与导出备份。" />
 		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 		<link rel="stylesheet" href="/assets/css/base.css" />
 		<script>
@@ -12,22 +12,98 @@
 		</script>
 		<style>
 			/* ---------- 统计页专属 ---------- */
-			.trend-block {
-				margin: 18px 0;
+			.today-card {
+				display: flex;
+				align-items: center;
+				gap: 16px;
+				flex-wrap: wrap;
+			}
+			.today-card .tc-label {
+				font-size: 14px;
+				color: var(--ink-2);
+				font-weight: 600;
+			}
+			.today-card .tc-hint {
+				font-size: 13px;
+				color: var(--ink-3);
+			}
+			/* 能力光谱：每模块一行，次数条 + 最佳成绩 */
+			.spec-row {
+				display: grid;
+				grid-template-columns: 16px 92px 1fr 64px 116px;
+				gap: 10px;
+				align-items: center;
+				padding: 9px 0;
+				border-bottom: 1px solid var(--line);
+				font-size: 14px;
+			}
+			.spec-row:last-child {
+				border-bottom: none;
+			}
+			.spec-dot {
+				width: 12px;
+				height: 12px;
+				border-radius: 50%;
+				background: var(--td-hue);
+			}
+			.spec-name {
+				font-weight: 600;
+			}
+			.spec-bar {
+				height: 8px;
+				background: var(--surface-2);
+				border-radius: 999px;
+				overflow: hidden;
+			}
+			.spec-bar i {
+				display: block;
+				height: 100%;
+				border-radius: 999px;
+				background: var(--td-hue);
+			}
+			.spec-count {
+				color: var(--ink-2);
+				text-align: right;
+			}
+			.spec-best {
+				color: var(--ink-3);
+				font-size: 12.5px;
+				text-align: right;
+			}
+			@media (max-width: 560px) {
+				.spec-row {
+					grid-template-columns: 14px 74px 1fr 52px 92px;
+					gap: 7px;
+					font-size: 13px;
+				}
+				.spec-best {
+					font-size: 11.5px;
+				}
+			}
+			/* 趋势：双列，各模块用自己的色 */
+			.trend-grid {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 18px;
+			}
+			@media (max-width: 760px) {
+				.trend-grid {
+					grid-template-columns: 1fr;
+				}
 			}
 			.trend-block h3 {
 				margin: 0 0 6px;
 				font-size: 15px;
+				display: flex;
+				align-items: baseline;
+				gap: 8px;
 			}
 			.trend-block h3 .metric {
 				color: var(--ink-3);
 				font-weight: 500;
-				font-size: 13px;
+				font-size: 12.5px;
 			}
-			/* 趋势图坐在点阵方格纸上：像手绘统计图 */
-			#trend-math,
-			#trend-nback,
-			#trend-meditation {
+			.trend-chart {
 				background-color: var(--surface);
 				background-image: radial-gradient(var(--dot) 1px, transparent 1.2px);
 				background-size: 18px 18px;
@@ -39,6 +115,39 @@
 				width: 100%;
 				height: auto;
 				display: block;
+			}
+			/* 明细筛选 chips */
+			.log-filters {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 8px;
+				margin-bottom: 14px;
+			}
+			.log-filters button {
+				font: inherit;
+				font-size: 13px;
+				padding: 5px 13px;
+				border-radius: 999px;
+				border: 1px solid var(--line);
+				background: var(--surface);
+				color: var(--ink-2);
+				cursor: pointer;
+				display: inline-flex;
+				align-items: center;
+				gap: 6px;
+				transition: background 0.15s, color 0.15s;
+			}
+			.log-filters button .fd {
+				width: 8px;
+				height: 8px;
+				border-radius: 50%;
+				background: var(--fd-hue);
+			}
+			.log-filters button[aria-pressed="true"] {
+				background: var(--ink);
+				border-color: var(--ink);
+				color: #fff;
+				font-weight: 600;
 			}
 			.secs {
 				font-size: 14px;
@@ -58,21 +167,49 @@
 			.secs td.num {
 				color: var(--ink-2);
 			}
+			@media (max-width: 560px) {
+				.secs .col-params {
+					display: none;
+				}
+			}
 		</style>
 	</head>
-	<body>
+	<body class="mod-stats">
 		<header class="topbar">
-			<nav class="nav">
-				<a class="brand" href="/">心智训练站</a>
-				<a href="/">首页</a>
-				<a href="/math/">心算</a>
-				<a href="/nback/">N-back</a>
-				<a href="/meditation/">冥想</a>
-				<a href="/stats/" aria-current="page">统计</a>
+			<nav class="nav" aria-label="主导航">
+				<a class="brand" href="/">
+					<svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+						<circle cx="5" cy="7.5" r="2.7" fill="var(--m-math)" />
+						<circle cx="12" cy="7.5" r="2.7" fill="var(--m-schulte)" />
+						<circle cx="19" cy="7.5" r="2.7" fill="var(--m-span)" />
+						<circle cx="5" cy="16.5" r="2.7" fill="var(--m-nback)" />
+						<circle cx="12" cy="16.5" r="2.7" fill="var(--m-stroop)" />
+						<circle cx="19" cy="16.5" r="2.7" fill="var(--m-meditation)" />
+					</svg>
+					心智训练站
+				</a>
+				<div class="nav-links">
+					<a href="/">首页</a>
+					<a href="/math/">心算</a>
+					<a href="/nback/">N-back</a>
+					<a href="/schulte/">舒尔特</a>
+					<a href="/stroop/">色词</a>
+					<a href="/span/">序列</a>
+					<a href="/meditation/">冥想</a>
+					<a href="/stats/" aria-current="page">统计</a>
+				</div>
+				<button id="sound-toggle" class="sound-toggle" type="button" aria-pressed="true">
+					<svg class="i-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M4 9v6h4l5 4V5L8 9H4z" /><path d="M16.5 8.5a5 5 0 0 1 0 7" /><path d="M19 6a8.5 8.5 0 0 1 0 12" />
+					</svg>
+					<svg class="i-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M4 9v6h4l5 4V5L8 9H4z" /><path d="M17 9l4 6M21 9l-4 6" />
+					</svg>
+				</button>
 			</nav>
 		</header>
 
-		<main class="container">
+		<main class="container wide">
 			<div class="page-head">
 				<span class="wm" aria-hidden="true">
 					<svg viewBox="0 0 24 24" fill="none">
@@ -80,7 +217,7 @@
 					</svg>
 				</span>
 				<h1>训练统计</h1>
-				<p class="sub">数据只存在本浏览器。清站点数据前先导出备份。</p>
+				<p class="sub">数据只存在本浏览器，全部现算。清站点数据前先导出备份。</p>
 			</div>
 
 			<div class="stat-row">
@@ -89,33 +226,38 @@
 				<div class="stat-cell"><div class="value num" id="s-week">0</div><div class="label">本周</div></div>
 			</div>
 
+			<section class="card today-card">
+				<span class="tc-label">今日光谱</span>
+				<div class="today-dots" id="today-dots" aria-label="今日各模块训练状态"></div>
+				<span class="tc-hint">练过的模块会点亮对应颜色</span>
+			</section>
+
+			<section class="card">
+				<h2>能力光谱</h2>
+				<div id="spectrum"></div>
+				<div class="empty" id="spectrum-empty">
+					还没有训练记录。先去任意模块练一轮，这里就会长出你的能力分布。
+				</div>
+			</section>
+
 			<section class="card">
 				<h2>趋势（近 30 次）</h2>
-				<div class="trend-block">
-					<h3>心算 <span class="metric">· 答对题数</span></h3>
-					<div id="trend-math"></div>
-				</div>
-				<div class="trend-block">
-					<h3>N-back <span class="metric">· 准确率 %</span></h3>
-					<div id="trend-nback"></div>
-				</div>
-				<div class="trend-block">
-					<h3>冥想 <span class="metric">· 实际时长（分钟）</span></h3>
-					<div id="trend-meditation"></div>
+				<div class="trend-grid" id="trend-grid">
+					<div class="empty" id="trend-nojs">启用 JavaScript 后，这里会画出六个模块各自的趋势曲线。</div>
 				</div>
 			</section>
 
 			<section class="card">
 				<h2>会话明细</h2>
+				<div class="log-filters" id="log-filters"></div>
 				<table class="secs num" style="width: 100%; border-collapse: collapse">
 					<thead>
-						<tr><th>时间</th><th>模块</th><th>参数</th><th>成绩</th></tr>
+						<tr><th>时间</th><th>模块</th><th class="col-params">参数</th><th>成绩</th></tr>
 					</thead>
 					<tbody id="log-body"></tbody>
 				</table>
-				<div class="empty" id="log-empty" hidden>
-					还没有任何训练记录。先去<a href="/math/">心算</a>、<a href="/nback/">N-back</a> 或
-					<a href="/meditation/">冥想</a>练一轮，这里就会有东西了。
+				<div class="empty" id="log-empty">
+					还没有任何训练记录。先去<a href="/math/">心算</a>、<a href="/schulte/">舒尔特</a>或<a href="/meditation/">冥想</a>练一轮，这里就会有东西了。
 				</div>
 			</section>
 

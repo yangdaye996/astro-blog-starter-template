@@ -11,59 +11,27 @@
 			document.documentElement.classList.remove('no-js');
 		</script>
 		<style>
-			/* ---------- 心算专属（本页自包含）---------- */
-			.game-top {
-				display: flex;
-				align-items: baseline;
-				justify-content: space-between;
-			}
-			.timer {
-				font-size: 56px;
-				font-weight: 800;
-				color: var(--ink);
-				line-height: 1;
-			}
-			.timer.low {
-				color: var(--bad);
-			}
-			/* 剩余时间进度线：秒数越少墨线越短，临 10 秒转红 */
-			.time-track {
-				height: 3px;
-				background: var(--surface-2);
-				border-radius: 999px;
-				overflow: hidden;
-				margin: 10px 0 4px;
-			}
-			.time-bar {
-				height: 100%;
-				width: 100%;
-				background: var(--accent);
-				transition: width 0.3s linear;
-			}
-			.time-bar.low {
-				background: var(--bad);
-			}
-			.progress-line {
-				color: var(--ink-3);
-				font-size: 15px;
-				font-weight: 600;
-			}
+			/* ---------- 心算专属 ---------- */
 			.question {
 				text-align: center;
-				font-size: 60px;
-				font-weight: 900;
-				margin: 30px 0 6px;
-				letter-spacing: 0.04em;
+				font-family: var(--font-num);
+				font-variant-numeric: tabular-nums;
+				font-size: clamp(44px, 12vw, 62px);
+				font-weight: 700;
+				margin: 28px 0 6px;
+				letter-spacing: 0.03em;
 				line-height: 1.15;
 			}
-			/* 作答 = 纸上一条墨线，答在墨线上 */
+			/* 作答 = 一条模块色墨线，答在线上 */
 			.entry-line {
 				text-align: center;
+				font-family: var(--font-num);
+				font-variant-numeric: tabular-nums;
 				font-size: 34px;
 				font-weight: 700;
 				color: var(--ink-2);
 				min-height: 52px;
-				border-bottom: 2px solid var(--ink);
+				border-bottom: 2.5px solid var(--mod);
 				width: 7ch;
 				margin: 0 auto 10px;
 			}
@@ -73,12 +41,8 @@
 				font-size: 16px;
 				font-weight: 700;
 			}
-			.feedback.ok {
-				color: var(--good);
-			}
-			.feedback.err {
-				color: var(--bad);
-			}
+			.feedback.ok { color: var(--good); }
+			.feedback.err { color: var(--bad); }
 			.keypad {
 				display: grid;
 				grid-template-columns: repeat(3, 1fr);
@@ -88,6 +52,7 @@
 			}
 			.keypad button {
 				font: inherit;
+				font-family: var(--font-num);
 				font-size: 21px;
 				font-weight: 600;
 				padding: 14px 0;
@@ -97,64 +62,64 @@
 				color: var(--ink);
 				cursor: pointer;
 				font-variant-numeric: tabular-nums;
-				transition: border-color 0.15s;
+				transition: border-color 0.15s, background 0.15s;
 			}
 			.keypad button:hover {
-				border-color: var(--ink-3);
+				border-color: var(--mod);
 			}
 			.keypad button:active {
 				transform: translateY(1px);
-				background: var(--surface-2);
+				background: var(--mod-soft);
 			}
 			.keypad button.wide {
 				grid-column: 1 / -1;
-				background: var(--accent);
-				border-color: var(--accent);
+				background: var(--mod);
+				border-color: transparent;
 				color: #fff;
+				font-family: var(--font);
 				font-size: 16px;
+			}
+			.keypad button.wide:hover {
+				background: color-mix(in srgb, var(--mod) 86%, #10142a);
 			}
 			.keypad button:disabled {
 				opacity: 0.5;
 				cursor: not-allowed;
 			}
-			/* 物理键盘提示：键帽样式 */
-			.kbd-hint {
-				text-align: center;
-				color: var(--ink-3);
-				font-size: 13px;
-				margin: 14px 0 0;
-			}
-			.kbd-hint kbd {
-				font-family: inherit;
-				font-size: 12px;
-				padding: 0 6px;
-				margin: 0 1px;
-				border: 1px solid var(--line);
-				border-bottom-width: 2px;
-				border-radius: 4px;
-				background: var(--surface);
-				color: var(--ink-2);
-			}
-			.result-num {
-				font-size: 44px;
-				font-weight: 800;
-				color: var(--accent);
-			}
-			.result-line {
-				color: var(--ink-2);
-				margin: 4px 0 14px;
-			}
 		</style>
 	</head>
-	<body>
+	<body class="mod-math">
 		<header class="topbar">
-			<nav class="nav">
-				<a class="brand" href="/">心智训练站</a>
-				<a href="/">首页</a>
-				<a href="/math/" aria-current="page">心算</a>
-				<a href="/nback/">N-back</a>
-				<a href="/meditation/">冥想</a>
-				<a href="/stats/">统计</a>
+			<nav class="nav" aria-label="主导航">
+				<a class="brand" href="/">
+					<svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+						<circle cx="5" cy="7.5" r="2.7" fill="var(--m-math)" />
+						<circle cx="12" cy="7.5" r="2.7" fill="var(--m-schulte)" />
+						<circle cx="19" cy="7.5" r="2.7" fill="var(--m-span)" />
+						<circle cx="5" cy="16.5" r="2.7" fill="var(--m-nback)" />
+						<circle cx="12" cy="16.5" r="2.7" fill="var(--m-stroop)" />
+						<circle cx="19" cy="16.5" r="2.7" fill="var(--m-meditation)" />
+					</svg>
+					心智训练站
+				</a>
+				<div class="nav-links">
+					<a href="/">首页</a>
+					<a href="/math/" aria-current="page">心算</a>
+					<a href="/nback/">N-back</a>
+					<a href="/schulte/">舒尔特</a>
+					<a href="/stroop/">色词</a>
+					<a href="/span/">序列</a>
+					<a href="/meditation/">冥想</a>
+					<a href="/stats/">统计</a>
+				</div>
+				<button id="sound-toggle" class="sound-toggle" type="button" aria-pressed="true">
+					<svg class="i-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M4 9v6h4l5 4V5L8 9H4z" /><path d="M16.5 8.5a5 5 0 0 1 0 7" /><path d="M19 6a8.5 8.5 0 0 1 0 12" />
+					</svg>
+					<svg class="i-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M4 9v6h4l5 4V5L8 9H4z" /><path d="M17 9l4 6M21 9l-4 6" />
+					</svg>
+				</button>
 			</nav>
 		</header>
 
@@ -166,6 +131,7 @@
 						<path d="M8.5 8.5l7 7M15.5 8.5l-7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
 					</svg>
 				</span>
+				<span class="ability-pill">计算速度</span>
 				<h1>心算</h1>
 				<p class="sub">限时冲刺：倒计时内键入答案，答对尽可能多。</p>
 			</div>
@@ -227,12 +193,12 @@
 			<!-- 结果 -->
 			<section class="card" id="result" hidden>
 				<h2>本轮成绩</h2>
-				<div class="result-num num" id="r-correct">0</div>
-				<p class="result-line num" id="r-detail"></p>
-				<p class="hint">已写入本地记录。统计页可看趋势曲线。</p>
-				<div style="display: flex; gap: 10px">
+				<div class="score num" id="r-correct">0 题</div>
+				<p class="score-line num" id="r-detail"></p>
+				<p class="best-line" id="r-best"></p>
+				<div class="result-actions">
 					<button class="btn" id="btn-again">再来一轮</button>
-					<a class="btn ghost" href="/stats/" style="text-decoration: none; text-align: center">看统计</a>
+					<a class="btn ghost" href="/stats/">看统计</a>
 				</div>
 			</section>
 		</main>

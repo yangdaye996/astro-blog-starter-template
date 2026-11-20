@@ -9,32 +9,55 @@
 	</head>
 	<body>
 		<header class="topbar">
-			<nav class="nav">
-				<a class="brand" href="/">心智训练站</a>
-				<a href="/">首页</a>
-				<a href="/math/">心算</a>
-				<a href="/nback/">N-back</a>
-				<a href="/meditation/">冥想</a>
-				<a href="/stats/">统计</a>
+			<nav class="nav" aria-label="主导航">
+				<a class="brand" href="/">
+					<svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+						<circle cx="5" cy="7.5" r="2.7" fill="var(--m-math)" />
+						<circle cx="12" cy="7.5" r="2.7" fill="var(--m-schulte)" />
+						<circle cx="19" cy="7.5" r="2.7" fill="var(--m-span)" />
+						<circle cx="5" cy="16.5" r="2.7" fill="var(--m-nback)" />
+						<circle cx="12" cy="16.5" r="2.7" fill="var(--m-stroop)" />
+						<circle cx="19" cy="16.5" r="2.7" fill="var(--m-meditation)" />
+					</svg>
+					心智训练站
+				</a>
+				<div class="nav-links">
+					<a href="/">首页</a>
+					<a href="/math/">心算</a>
+					<a href="/nback/">N-back</a>
+					<a href="/schulte/">舒尔特</a>
+					<a href="/stroop/">色词</a>
+					<a href="/span/">序列</a>
+					<a href="/meditation/">冥想</a>
+					<a href="/stats/">统计</a>
+				</div>
+				<button id="sound-toggle" class="sound-toggle" type="button" aria-pressed="true">
+					<svg class="i-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M4 9v6h4l5 4V5L8 9H4z" /><path d="M16.5 8.5a5 5 0 0 1 0 7" /><path d="M19 6a8.5 8.5 0 0 1 0 12" />
+					</svg>
+					<svg class="i-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M4 9v6h4l5 4V5L8 9H4z" /><path d="M17 9l4 6M21 9l-4 6" />
+					</svg>
+				</button>
 			</nav>
 		</header>
 		<main class="container">
 			<div class="page-head">
-				<span class="wm" aria-hidden="true">
-					<svg viewBox="0 0 24 24" fill="none">
-						<circle cx="12" cy="12" r="8.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-dasharray="44 10" transform="rotate(-55 12 12)" />
-					</svg>
-				</span>
 				<h1 class="num">404</h1>
-				<p class="sub">这页不存在。训练台只有五个房间。</p>
+				<p class="sub">这页不在光谱里。训练站只有八个房间，你走到墙外了。</p>
 			</div>
+			<div class="spectrum-line" aria-hidden="true"></div>
 			<div class="card">
 				<p style="margin: 0 0 14px; color: var(--ink-2)">
-					去 <a href="/math/">心算</a>、<a href="/nback/">N-back</a>、<a href="/meditation/">冥想</a>
+					去 <a href="/math/">心算</a>、<a href="/nback/">N-back</a>、<a href="/schulte/">舒尔特</a>、<a href="/stroop/">色词</a>、<a href="/span/">序列</a>、<a href="/meditation/">冥想</a>
 					或 <a href="/stats/">统计</a> 坐一会儿，或者——
 				</p>
 				<a class="btn" href="/">回首页</a>
 			</div>
 		</main>
+		<script type="module">
+			import { initSoundToggle } from '/assets/js/ui.js';
+			initSoundToggle();
+		</script>
 	</body>
 </html>

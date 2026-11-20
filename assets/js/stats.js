@@ -1,7 +1,8 @@
-// 统计派生（ADR-0012）：连续天数、周次数、趋势序列全部从会话日志现算，
+// 统计派生（ADR-0012）：连续天数、周次数、趋势序列、个人最佳全部从会话日志现算，
 // 不做任何落盘缓存 —— 日志是唯一事实，统计是它的纯函数。
 
 import { ONE_DAY } from './store.js';
+import { moduleOf } from './modules.js';
 
 // 本地时区的 YYYY-MM-DD
 export function dayKey(ms) {
@@ -56,4 +57,18 @@ export function trendSeries(sessions, module, metric, n = 30) {
 		ts: s.ts,
 		value: metric(s),
 	}));
+}
+
+// 个人最佳：同模块（可再加参数过滤，如同档位/同阶）里指标最优的一条会话。
+// 比较方向与指标口径来自模块注册表（modules.js），返回会话条目或 null。
+export function bestSession(sessions, module, filter = () => true) {
+	const m = moduleOf(module);
+	if (typeof m.metric !== 'function') return null;
+	const list = sessions.filter((s) => s.module === module && filter(s));
+	if (list.length === 0) return null;
+	return list.reduce((best, s) => {
+		const a = m.metric(best);
+		const b = m.metric(s);
+		return m.better === 'low' ? (b < a ? s : best) : (b > a ? s : best);
+	});
 }

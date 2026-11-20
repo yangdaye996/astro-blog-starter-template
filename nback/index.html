@@ -12,21 +12,12 @@
 		</script>
 		<style>
 			/* ---------- N-back 专属 ---------- */
-			.game-top {
-				display: flex;
-				align-items: baseline;
-				justify-content: space-between;
-			}
 			.nflag {
-				font-size: 24px;
-				font-weight: 800;
-				color: var(--accent);
+				font-family: var(--font-num);
+				font-size: 26px;
+				font-weight: 700;
+				color: var(--mod);
 				line-height: 1;
-			}
-			.progress-line {
-				color: var(--ink-3);
-				font-size: 15px;
-				font-weight: 600;
 			}
 			.grid {
 				display: grid;
@@ -35,19 +26,20 @@
 				max-width: 340px;
 				margin: 26px auto;
 			}
-			/* 格子 = 纸上白瓦，亮起 = 滴进一格墨 */
+			/* 格子 = 白瓦，亮起 = 涂满模块色 */
 			.cell {
 				aspect-ratio: 1;
 				border-radius: var(--radius-s);
 				background: var(--surface);
 				border: 1px solid var(--line);
-				transition: background 0.1s;
+				transition: background 0.1s, border-color 0.1s;
 			}
 			.cell.lit {
-				background: var(--ink);
-				border-color: var(--ink);
+				background: var(--mod);
+				border-color: var(--mod);
+				box-shadow: 0 0 0 4px color-mix(in srgb, var(--mod) 20%, transparent);
 			}
-			/* 按键判定闪色：盖满全盘软色，stimulus 已灭时也能看见反馈 */
+			/* 按键判定闪色：盖满全盘软色，刺激已灭时也能看见反馈 */
 			.grid.judge-ok .cell {
 				background: var(--good-soft);
 				border-color: var(--good);
@@ -68,36 +60,40 @@
 				font-size: 13.5px;
 				margin: 6px 0 16px;
 			}
-			.result-grid {
-				display: grid;
-				grid-template-columns: repeat(4, 1fr);
-				gap: 8px;
-				margin: 14px 0 4px;
-				text-align: center;
-			}
-			.result-grid .v {
-				font-size: 26px;
-				font-weight: 800;
-				color: var(--ink);
-			}
-			.result-grid .l {
-				font-size: 12.5px;
-				color: var(--ink-3);
-			}
-			.result-grid .acc .v {
-				color: var(--accent);
-			}
 		</style>
 	</head>
-	<body>
+	<body class="mod-nback">
 		<header class="topbar">
-			<nav class="nav">
-				<a class="brand" href="/">心智训练站</a>
-				<a href="/">首页</a>
-				<a href="/math/">心算</a>
-				<a href="/nback/" aria-current="page">N-back</a>
-				<a href="/meditation/">冥想</a>
-				<a href="/stats/">统计</a>
+			<nav class="nav" aria-label="主导航">
+				<a class="brand" href="/">
+					<svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+						<circle cx="5" cy="7.5" r="2.7" fill="var(--m-math)" />
+						<circle cx="12" cy="7.5" r="2.7" fill="var(--m-schulte)" />
+						<circle cx="19" cy="7.5" r="2.7" fill="var(--m-span)" />
+						<circle cx="5" cy="16.5" r="2.7" fill="var(--m-nback)" />
+						<circle cx="12" cy="16.5" r="2.7" fill="var(--m-stroop)" />
+						<circle cx="19" cy="16.5" r="2.7" fill="var(--m-meditation)" />
+					</svg>
+					心智训练站
+				</a>
+				<div class="nav-links">
+					<a href="/">首页</a>
+					<a href="/math/">心算</a>
+					<a href="/nback/" aria-current="page">N-back</a>
+					<a href="/schulte/">舒尔特</a>
+					<a href="/stroop/">色词</a>
+					<a href="/span/">序列</a>
+					<a href="/meditation/">冥想</a>
+					<a href="/stats/">统计</a>
+				</div>
+				<button id="sound-toggle" class="sound-toggle" type="button" aria-pressed="true">
+					<svg class="i-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M4 9v6h4l5 4V5L8 9H4z" /><path d="M16.5 8.5a5 5 0 0 1 0 7" /><path d="M19 6a8.5 8.5 0 0 1 0 12" />
+					</svg>
+					<svg class="i-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M4 9v6h4l5 4V5L8 9H4z" /><path d="M17 9l4 6M21 9l-4 6" />
+					</svg>
+				</button>
 			</nav>
 		</header>
 
@@ -118,6 +114,7 @@
 						<rect x="9.7" y="9.7" width="4.6" height="4.6" rx="1.3" fill="currentColor" />
 					</svg>
 				</span>
+				<span class="ability-pill">工作记忆</span>
 				<h1>N-back</h1>
 				<p class="sub">单位置记忆：亮起的位置与 n 步前相同时按空格，不同就不按。</p>
 			</div>
@@ -165,16 +162,17 @@
 			<!-- 结果 -->
 			<section class="card" id="result" hidden>
 				<h2>本轮成绩</h2>
-				<div class="result-grid num">
-					<div><div class="v" id="r-acc">0%</div><div class="l">准确率</div></div>
+				<div class="result-cells num">
+					<div class="hl"><div class="v" id="r-acc">0%</div><div class="l">准确率</div></div>
 					<div><div class="v" id="r-hit">0</div><div class="l">命中</div></div>
 					<div><div class="v" id="r-miss">0</div><div class="l">漏报</div></div>
 					<div><div class="v" id="r-fa">0</div><div class="l">误报</div></div>
 				</div>
+				<p class="best-line" id="r-best"></p>
 				<p class="hint">命中 = 有目标按了；漏报 = 有目标没按；误报 = 没目标按了。</p>
-				<div style="display: flex; gap: 10px">
+				<div class="result-actions">
 					<button class="btn" id="btn-again">再来一轮</button>
-					<a class="btn ghost" href="/stats/" style="text-decoration: none; text-align: center">看统计</a>
+					<a class="btn ghost" href="/stats/">看统计</a>
 				</div>
 			</section>
 		</main>

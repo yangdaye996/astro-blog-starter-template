@@ -1,27 +1,21 @@
 // N-back 模块（ADR-0013）：单位置 n-back，3×3 网格。
 // 一轮 = 20+n 个刺激；呈现 500ms，间隔 3000ms；目标 ≥ 6 个（构造而非纯随机）。
 
-import { addSession } from '../store.js';
+import { addSession, loadSessions } from '../store.js';
+import { bestSession } from '../stats.js';
+import { bindSeg, initSoundToggle } from '../ui.js';
+import { blip, buzz, chime } from '../audio.js';
+
+initSoundToggle();
 
 const SHOW_MS = 500;
 const INTERVAL_MS = 3000;
 
 // ---------- 分段选择器 ----------
 
-function setupSeg(el, onChange) {
-	for (const btn of el.querySelectorAll('button')) {
-		btn.addEventListener('click', () => {
-			for (const b of el.querySelectorAll('button')) {
-				b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
-			}
-			onChange(btn.dataset.value);
-		});
-	}
-}
-
 let n = 2;
 
-setupSeg(document.getElementById('seg-n'), (v) => {
+bindSeg(document.getElementById('seg-n'), (v) => {
 	n = Number(v);
 	renderTrialInfo();
 });
@@ -148,6 +142,7 @@ function press() {
 	pressed = true;
 	const ok = targetMask[idx]; // 当下即可判定（pos[idx] 与 pos[idx-n] 已知）
 	gridEl.classList.add(ok ? 'judge-ok' : 'judge-bad');
+	ok ? blip(700, 0.14) : buzz();
 	clearTimeout(flashTimeout);
 	flashTimeout = setTimeout(() => gridEl.classList.remove('judge-ok', 'judge-bad'), 350);
 }
@@ -159,17 +154,30 @@ function end() {
 	// 命中 + 正确拒绝 / 总刺激数
 	const correctRejections = trials - targetCount - falseAlarms;
 	const accuracy = (hits + correctRejections) / trials;
+	const accPct = Math.round(accuracy * 100);
+
+	// 先取旧最佳再写入（同 n 值才可比）
+	const prior = bestSession(loadSessions(), 'nback', (s) => s.params.n === n);
+	const isRecord = !prior || accPct > Math.round(prior.result.accuracy * 100);
 	addSession({
 		module: 'nback',
 		ts: startTs,
 		params: { n, trials, intervalMs: INTERVAL_MS },
 		result: { hits, misses, falseAlarms, accuracy: Number(accuracy.toFixed(4)) },
 	});
+
+	chime();
 	gameEl.hidden = true;
-	$('r-acc').textContent = `${Math.round(accuracy * 100)}%`;
+	$('r-acc').textContent = `${accPct}%`;
 	$('r-hit').textContent = hits;
 	$('r-miss').textContent = misses;
 	$('r-fa').textContent = falseAlarms;
+	$('r-best').textContent = prior
+		? `同 n 值最佳准确率 ${Math.round(prior.result.accuracy * 100)}%`
+		: `这是你的第一个 n=${n} 成绩`;
+	if (isRecord) {
+		$('r-best').insertAdjacentHTML('beforeend', '<span class="record-tag">新纪录</span>');
+	}
 	resultEl.hidden = false;
 }
 

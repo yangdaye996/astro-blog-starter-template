@@ -1,30 +1,18 @@
 // 心算模块（ADR-0013）：三档难度、限时冲刺、键入作答。
 // 题库生成器按档位写成纯函数；成绩口径 = 档位内答对题数。
 
-import { addSession } from '../store.js';
+import { addSession, loadSessions } from '../store.js';
+import { bestSession } from '../stats.js';
+import { bindSeg, initSoundToggle } from '../ui.js';
+import { blip, buzz, chime } from '../audio.js';
 
-// ---------- 分段选择器 ----------
-
-function setupSeg(el, onChange) {
-	for (const btn of el.querySelectorAll('button')) {
-		btn.addEventListener('click', () => {
-			for (const b of el.querySelectorAll('button')) {
-				b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
-			}
-			onChange(btn.dataset.value);
-		});
-	}
-}
-
-function segValue(el) {
-	return el.querySelector('[aria-pressed="true"]').dataset.value;
-}
+initSoundToggle();
 
 let level = 1;
 let seconds = 60;
 
-setupSeg(document.getElementById('seg-level'), (v) => (level = Number(v)));
-setupSeg(document.getElementById('seg-seconds'), (v) => (seconds = Number(v)));
+bindSeg(document.getElementById('seg-level'), (v) => (level = Number(v)));
+bindSeg(document.getElementById('seg-seconds'), (v) => (seconds = Number(v)));
 
 // ---------- 题库生成器 ----------
 
@@ -139,11 +127,13 @@ function judge() {
 	answered += 1;
 	if (val === cur.answer) {
 		correct += 1;
+		blip(700, 0.14);
 		showFeedback('ok', '✓ 对了');
 		nextTimer = setTimeout(nextQuestion, 350);
 	} else {
 		pending = true;
 		setKeypadEnabled(false);
+		buzz();
 		showFeedback('err', `✗ 正确答案 ${cur.answer}`);
 		nextTimer = setTimeout(nextQuestion, 900);
 	}
@@ -171,14 +161,30 @@ function end() {
 	clearTimeout(nextTimer);
 	gameEl.hidden = true;
 	const rate = answered > 0 ? Math.round((correct / answered) * 100) : 0;
+
+	// 先取旧最佳再写入，才能判断本轮是否破纪录（同档位同时长才可比）
+	const prior = bestSession(
+		loadSessions(),
+		'math',
+		(s) => s.params.level === level && s.params.seconds === seconds
+	);
+	const isRecord = !prior || correct > prior.result.correct;
 	addSession({
 		module: 'math',
 		ts: startTs,
 		params: { level, seconds },
 		result: { answered, correct, rate },
 	});
+
+	chime();
 	$('r-correct').textContent = `${correct} 题`;
 	$('r-detail').textContent = `答 ${answered} 题 · 正确率 ${rate}% · L${level} · ${seconds} 秒`;
+	$('r-best').textContent = prior
+		? `同档同时长最佳 ${prior.result.correct} 题`
+		: `这是你的第一个 L${level} · ${seconds} 秒成绩`;
+	if (isRecord) {
+		$('r-best').insertAdjacentHTML('beforeend', '<span class="record-tag">新纪录</span>');
+	}
 	resultEl.hidden = false;
 }
 

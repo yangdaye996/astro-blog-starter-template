@@ -1,0 +1,193 @@
+<!doctype html>
+<html class="no-js" lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>斯特鲁普 · 心智训练站</title>
+		<meta name="description" content="斯特鲁普色词抗干扰训练：选字的墨色，忍住别读字义。" />
+		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+		<link rel="stylesheet" href="/assets/css/base.css" />
+		<script>
+			document.documentElement.classList.remove('no-js');
+		</script>
+		<style>
+			/* ---------- 斯特鲁普专属 ---------- */
+			.stimulus {
+				text-align: center;
+				font-size: clamp(56px, 16vw, 88px);
+				font-weight: 900;
+				line-height: 1.1;
+				margin: 26px 0 4px;
+				min-height: 1.2em;
+				letter-spacing: 0.04em;
+			}
+			.cue {
+				text-align: center;
+				color: var(--ink-3);
+				font-size: 14px;
+				margin: 0 0 20px;
+			}
+			.resp-grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(104px, 1fr));
+				gap: 10px;
+				max-width: 480px;
+				margin: 0 auto;
+			}
+			.resp-grid button {
+				font: inherit;
+				font-size: 18px;
+				font-weight: 700;
+				padding: 16px 0 12px;
+				border-radius: var(--radius-s);
+				border: 2px solid transparent;
+				color: #fff;
+				cursor: pointer;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				gap: 3px;
+				transition: transform 0.06s, box-shadow 0.12s, border-color 0.12s;
+			}
+			.resp-grid button kbd {
+				font-family: var(--font-num);
+				font-size: 11px;
+				font-weight: 600;
+				opacity: 0.8;
+				border: 1px solid rgb(255 255 255 / 0.5);
+				border-radius: 4px;
+				padding: 0 5px;
+			}
+			.resp-grid button:hover {
+				box-shadow: 0 6px 16px -6px rgb(27 33 56 / 0.4);
+			}
+			.resp-grid button:active {
+				transform: scale(0.96);
+			}
+			.resp-grid button.ok {
+				border-color: var(--good);
+				box-shadow: 0 0 0 3px var(--good-soft);
+			}
+			.resp-grid button.bad {
+				border-color: var(--bad);
+				box-shadow: 0 0 0 3px var(--bad-soft);
+			}
+			.resp-grid button.reveal {
+				border-color: var(--good);
+				box-shadow: 0 0 0 3px var(--good-soft);
+			}
+			.resp-grid button:disabled {
+				cursor: default;
+			}
+			.feedback {
+				text-align: center;
+				min-height: 28px;
+				font-size: 15px;
+				font-weight: 700;
+				margin-top: 14px;
+			}
+			.feedback.ok { color: var(--good); }
+			.feedback.err { color: var(--bad); }
+		</style>
+	</head>
+	<body class="mod-stroop">
+		<header class="topbar">
+			<nav class="nav" aria-label="主导航">
+				<a class="brand" href="/">
+					<svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+						<circle cx="5" cy="7.5" r="2.7" fill="var(--m-math)" />
+						<circle cx="12" cy="7.5" r="2.7" fill="var(--m-schulte)" />
+						<circle cx="19" cy="7.5" r="2.7" fill="var(--m-span)" />
+						<circle cx="5" cy="16.5" r="2.7" fill="var(--m-nback)" />
+						<circle cx="12" cy="16.5" r="2.7" fill="var(--m-stroop)" />
+						<circle cx="19" cy="16.5" r="2.7" fill="var(--m-meditation)" />
+					</svg>
+					心智训练站
+				</a>
+				<div class="nav-links">
+					<a href="/">首页</a>
+					<a href="/math/">心算</a>
+					<a href="/nback/">N-back</a>
+					<a href="/schulte/">舒尔特</a>
+					<a href="/stroop/" aria-current="page">色词</a>
+					<a href="/span/">序列</a>
+					<a href="/meditation/">冥想</a>
+					<a href="/stats/">统计</a>
+				</div>
+				<button id="sound-toggle" class="sound-toggle" type="button" aria-pressed="true">
+					<svg class="i-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M4 9v6h4l5 4V5L8 9H4z" /><path d="M16.5 8.5a5 5 0 0 1 0 7" /><path d="M19 6a8.5 8.5 0 0 1 0 12" />
+					</svg>
+					<svg class="i-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M4 9v6h4l5 4V5L8 9H4z" /><path d="M17 9l4 6M21 9l-4 6" />
+					</svg>
+				</button>
+			</nav>
+		</header>
+
+		<main class="container">
+			<div class="page-head">
+				<span class="wm" aria-hidden="true">
+					<svg viewBox="0 0 24 24" fill="none">
+						<circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.4" />
+						<circle cx="15" cy="15" r="6" stroke="currentColor" stroke-width="1.4" />
+						<circle cx="15" cy="9" r="2.4" fill="currentColor" />
+					</svg>
+				</span>
+				<span class="ability-pill">抗干扰</span>
+				<h1>斯特鲁普</h1>
+				<p class="sub">字义和墨色打架时，选墨色。忍住读字的冲动，这就是在练抑制控制。</p>
+			</div>
+
+			<div class="js-warn">斯特鲁普需要启用 JavaScript，否则无法训练。</div>
+
+			<!-- 开局配置 -->
+			<section class="card" id="setup">
+				<h2>选择颜色数</h2>
+				<div class="seg-title">颜色数（越多越难分辨）</div>
+				<div class="seg" id="seg-colors">
+					<button data-value="4" aria-pressed="true">4 色</button>
+					<button data-value="6" aria-pressed="false">6 色</button>
+				</div>
+				<div class="seg-title num" id="trial-info"></div>
+				<p class="hint">一轮里一半题目字色一致、一半冲突，乱序出现。冲突题比一致题慢多少，就是你的干扰效应。</p>
+				<div style="margin-top: 18px">
+					<button class="btn big" id="btn-start">开始训练</button>
+				</div>
+			</section>
+
+			<!-- 训练进行中 -->
+			<section class="card board" id="game" hidden>
+				<div class="game-top">
+					<span class="progress-line num" id="progress">第 1 / 30 题</span>
+					<span class="progress-line num" id="score-live">对 0</span>
+				</div>
+				<div class="stimulus" id="stimulus">红</div>
+				<p class="cue">选这个字的<b>颜色</b>，不是它读什么</p>
+				<div class="resp-grid" id="resp"></div>
+				<div class="feedback" id="feedback"></div>
+				<p class="kbd-hint" id="kbd-hint"></p>
+			</section>
+
+			<!-- 结果 -->
+			<section class="card" id="result" hidden>
+				<h2>本轮成绩</h2>
+				<div class="score num" id="r-rate">0%</div>
+				<div class="result-cells num">
+					<div><div class="v" id="r-avg">0</div><div class="l">平均反应 ms</div></div>
+					<div class="hl"><div class="v" id="r-inter">0</div><div class="l">干扰效应 ms</div></div>
+					<div><div class="v" id="r-correct">0</div><div class="l">答对题数</div></div>
+				</div>
+				<p class="score-line num" id="r-detail"></p>
+				<p class="best-line" id="r-best"></p>
+				<p class="hint">干扰效应 = 冲突题平均反应 − 一致题平均反应。越小，说明抗干扰越强。</p>
+				<div class="result-actions">
+					<button class="btn" id="btn-again">再来一轮</button>
+					<a class="btn ghost" href="/stats/">看统计</a>
+				</div>
+			</section>
+		</main>
+
+		<script type="module" src="/assets/js/stroop/game.js"></script>
+	</body>
+</html>

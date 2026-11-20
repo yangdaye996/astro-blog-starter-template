@@ -18,7 +18,7 @@
 				padding: 10px 0 6px;
 			}
 			.progress-track {
-				height: 3px;
+				height: 4px;
 				border-radius: 999px;
 				background: var(--surface-2);
 				overflow: hidden;
@@ -27,12 +27,15 @@
 			.progress-bar {
 				height: 100%;
 				width: 0%;
-				background: var(--accent);
+				background: var(--mod);
+				border-radius: 999px;
 				transition: width 0.3s linear;
 			}
 			.remain {
+				font-family: var(--font-num);
+				font-variant-numeric: tabular-nums;
 				font-size: 64px;
-				font-weight: 800;
+				font-weight: 700;
 				color: var(--ink);
 				margin: 10px 0 4px;
 				line-height: 1;
@@ -45,7 +48,7 @@
 				justify-content: center;
 				gap: 16px;
 			}
-			/* 呼吸球 = 水墨晕染的圆，随呼吸涨落（渐变仅此处使用） */
+			/* 呼吸球 = 松石绿晕染的圆，随呼吸涨落 */
 			.ball {
 				position: relative;
 				width: 150px;
@@ -53,71 +56,52 @@
 				border-radius: 50%;
 				background: radial-gradient(
 					circle at 50% 44%,
-					rgb(32 38 58 / 0.88) 0%,
-					rgb(32 38 58 / 0.64) 55%,
-					rgb(32 38 58 / 0.1) 78%,
+					rgb(12 166 120 / 0.9) 0%,
+					rgb(12 166 120 / 0.62) 55%,
+					rgb(12 166 120 / 0.1) 78%,
 					transparent 82%
 				);
 				animation: breathe 8s ease-in-out infinite;
 				will-change: transform;
 			}
-			/* 涟漪：墨圈随吸气外扩再淡去，一圈比一圈轻 */
+			/* 涟漪：绿圈随吸气外扩再淡去，一圈比一圈轻 */
 			.ball::before,
 			.ball::after {
 				content: "";
 				position: absolute;
 				inset: 0;
 				border-radius: 50%;
-				border: 1.5px solid rgb(32 38 58 / 0.26);
+				border: 1.5px solid rgb(12 166 120 / 0.3);
 				pointer-events: none;
 				animation: ripple 8s ease-out infinite;
 			}
 			.ball::after {
 				animation-delay: 4s;
-				border-color: rgb(44 67 196 / 0.2);
+				border-color: rgb(16 152 173 / 0.24);
 			}
 			@keyframes ripple {
-				0% {
-					transform: scale(0.55);
-					opacity: 0;
-				}
-				25% {
-					opacity: 0.9;
-				}
-				55%,
-				100% {
-					transform: scale(1.4);
-					opacity: 0;
-				}
+				0% { transform: scale(0.55); opacity: 0; }
+				25% { opacity: 0.9; }
+				55%, 100% { transform: scale(1.4); opacity: 0; }
 			}
 			@keyframes breathe {
-				0% {
-					transform: scale(0.62);
-				}
-				50% {
-					transform: scale(1);
-				}
-				100% {
-					transform: scale(0.62);
-				}
+				0% { transform: scale(0.62); }
+				50% { transform: scale(1); }
+				100% { transform: scale(0.62); }
 			}
 			.breath-word {
 				font-size: 22px;
 				font-weight: 700;
-				color: var(--accent);
+				color: var(--mod);
 				letter-spacing: 0.3em;
 				text-indent: 0.3em; /* 抵消末字间距，视觉居中 */
 			}
 			.count-in {
+				font-family: var(--font-num);
 				font-size: 80px;
-				font-weight: 800;
-				color: var(--accent);
+				font-weight: 700;
+				color: var(--mod);
 				line-height: 1;
-			}
-			.result-num {
-				font-size: 44px;
-				font-weight: 800;
-				color: var(--accent);
 			}
 			@media (prefers-reduced-motion: reduce) {
 				.ball,
@@ -128,15 +112,38 @@
 			}
 		</style>
 	</head>
-	<body>
+	<body class="mod-meditation">
 		<header class="topbar">
-			<nav class="nav">
-				<a class="brand" href="/">心智训练站</a>
-				<a href="/">首页</a>
-				<a href="/math/">心算</a>
-				<a href="/nback/">N-back</a>
-				<a href="/meditation/" aria-current="page">冥想</a>
-				<a href="/stats/">统计</a>
+			<nav class="nav" aria-label="主导航">
+				<a class="brand" href="/">
+					<svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+						<circle cx="5" cy="7.5" r="2.7" fill="var(--m-math)" />
+						<circle cx="12" cy="7.5" r="2.7" fill="var(--m-schulte)" />
+						<circle cx="19" cy="7.5" r="2.7" fill="var(--m-span)" />
+						<circle cx="5" cy="16.5" r="2.7" fill="var(--m-nback)" />
+						<circle cx="12" cy="16.5" r="2.7" fill="var(--m-stroop)" />
+						<circle cx="19" cy="16.5" r="2.7" fill="var(--m-meditation)" />
+					</svg>
+					心智训练站
+				</a>
+				<div class="nav-links">
+					<a href="/">首页</a>
+					<a href="/math/">心算</a>
+					<a href="/nback/">N-back</a>
+					<a href="/schulte/">舒尔特</a>
+					<a href="/stroop/">色词</a>
+					<a href="/span/">序列</a>
+					<a href="/meditation/" aria-current="page">冥想</a>
+					<a href="/stats/">统计</a>
+				</div>
+				<button id="sound-toggle" class="sound-toggle" type="button" aria-pressed="true">
+					<svg class="i-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M4 9v6h4l5 4V5L8 9H4z" /><path d="M16.5 8.5a5 5 0 0 1 0 7" /><path d="M19 6a8.5 8.5 0 0 1 0 12" />
+					</svg>
+					<svg class="i-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M4 9v6h4l5 4V5L8 9H4z" /><path d="M17 9l4 6M21 9l-4 6" />
+					</svg>
+				</button>
 			</nav>
 		</header>
 
@@ -147,8 +154,9 @@
 						<circle cx="12" cy="12" r="8.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-dasharray="44 10" transform="rotate(-55 12 12)" />
 					</svg>
 				</span>
+				<span class="ability-pill">平静专注</span>
 				<h1>冥想</h1>
-				<p class="sub">静坐计时，结束时一声钟。可开呼吸引导。</p>
+				<p class="sub">静坐计时，结束时一声钟。可开呼吸引导，跟着圆球一吸一呼。</p>
 			</div>
 
 			<div class="js-warn">冥想计时需要启用 JavaScript。</div>
@@ -192,12 +200,12 @@
 			<!-- 结果 -->
 			<section class="card" id="result" hidden>
 				<h2>本次记录</h2>
-				<div class="result-num num" id="r-min">0 分钟</div>
-				<p class="result-line num" id="r-detail"></p>
-				<p class="hint">已写入本地记录。</p>
-				<div style="display: flex; gap: 10px">
+				<div class="score num" id="r-min">0 分钟</div>
+				<p class="score-line num" id="r-detail"></p>
+				<p class="best-line" id="r-best"></p>
+				<div class="result-actions">
 					<button class="btn" id="btn-again">再来一次</button>
-					<a class="btn ghost" href="/stats/" style="text-decoration: none; text-align: center">看统计</a>
+					<a class="btn ghost" href="/stats/">看统计</a>
 				</div>
 			</section>
 		</main>

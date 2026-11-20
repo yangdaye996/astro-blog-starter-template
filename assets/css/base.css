@@ -1,41 +1,93 @@
 /* ============================================================
-   训练台 · 共享样式与设计令牌（ADR-0014 ·「墨与纸」修订）
+   光谱训练馆 · 共享样式与设计令牌（ADR-0016）
    令牌唯一源：本文件 :root，每个令牌只有一组值，只做浅色单主题。
-   模块专属样式写在各页 <style> 里；跨页复用的组件一律放这里。
+   六个模块各占一支饱和色（--m-*），模块页 body 挂 .mod-* 类
+   把 --mod 指到自己的色相；跨页复用的组件一律放这里，
+   模块专属样式写在各页 <style> 里。
    陷阱（继承旧教训）：设置了 display 的类会盖掉 UA 的
    [hidden]{display:none}，用 hidden 控显隐的元素必须保留文末规则。
    ============================================================ */
 
 :root {
-	/* 色板：纸面底、蓝黑墨字、群青墨水强调；红绿严格只做对错 */
-	--bg: #f6f5f0;
-	--surface: #fffef9;
-	--surface-2: #edece4;
-	--ink: #20263a;
-	--ink-2: #565e73;
-	--ink-3: #6f7789;
-	--line: #dfdccf;
-	--accent: #2c43c4;
-	--accent-strong: #20339e;
-	--accent-soft: #e7eaf9;
-	--good: #1e7a44;
-	--good-soft: #dcf0e3;
-	--bad: #c03434;
-	--bad-soft: #fae3e0;
+	/* 中性：冷瓷底、白面、深空墨字 */
+	--bg: #f2f4fa;
+	--surface: #ffffff;
+	--surface-2: #e9edf6;
+	--ink: #1b2138;
+	--ink-2: #4c5672;
+	--ink-3: #7b85a1;
+	--line: #dde3f0;
+	--line-strong: #c2cce0;
 
-	/* 点阵纸纹：训练盘面与趋势图的底子 */
-	--dot: rgb(32 38 58 / 0.07);
+	/* 站点主色 = 靛蓝（品牌、链接、焦点、统计页） */
+	--accent: #4263eb;
+	--accent-strong: #3451c7;
+	--accent-soft: #e6ebff;
 
-	/* 形状与层次：描边承担层次，阴影近乎归零 */
-	--radius: 8px;
-	--radius-s: 5px;
-	--shadow: 0 1px 2px rgb(32 38 58 / 0.05);
+	/* 六模块色：每个认知领域一支饱和色，软底用于卡片与标签 */
+	--m-math: #f76707;
+	--m-math-soft: #fff0e6;
+	--m-nback: #4263eb;
+	--m-nback-soft: #e6ebff;
+	--m-schulte: #e64980;
+	--m-schulte-soft: #fdeaf1;
+	--m-stroop: #1098ad;
+	--m-stroop-soft: #e2f4f7;
+	--m-span: #7048e8;
+	--m-span-soft: #ece7fc;
+	--m-meditation: #0ca678;
+	--m-meditation-soft: #e2f5ee;
 
-	/* 字体：系统栈零依赖（ADR-0014，废除字体子集） */
+	/* 语义色：严格只做状态反馈，不做装饰 */
+	--good: #2b8a3e;
+	--good-soft: #e3f5e8;
+	--bad: #e03131;
+	--bad-soft: #fde8e8;
+	--warn: #f08c00;
+	--warn-soft: #fff3e0;
+	--info: #1971c2;
+	--info-soft: #e7f1fb;
+
+	/* 点阵纸纹：训练盘面的底子，颜色随模块色 */
+	--dot: rgb(27 33 56 / 0.06);
+
+	/* 形状与层次 */
+	--radius: 14px;
+	--radius-s: 9px;
+	--shadow: 0 1px 2px rgb(27 33 56 / 0.04), 0 10px 28px -14px rgb(27 33 56 / 0.14);
+	--shadow-lift: 0 16px 36px -14px rgb(27 33 56 / 0.22);
+
+	/* 字体：系统栈零依赖。数字走 DIN 系 condensed 栈（计分/计时秒表感） */
 	--font:
 		-apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
 		"Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+	--font-num:
+		"Bahnschrift", "DIN Alternate", "Avenir Next Condensed", "Arial Narrow",
+		"Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+
+	/* 光谱条：六模块色按暖→冷排布，全站签名 */
+	--spectrum: linear-gradient(
+		90deg,
+		var(--m-math) 0%,
+		var(--m-schulte) 20%,
+		var(--m-span) 40%,
+		var(--m-nback) 60%,
+		var(--m-stroop) 80%,
+		var(--m-meditation) 100%
+	);
+
+	--topbar-h: 58px;
 }
+
+/* 模块色类：挂在 body 上整页换色，挂在入口卡上单卡换色。
+   未挂类时 --mod 回落站点主色。 */
+.mod-math { --mod: var(--m-math); --mod-soft: var(--m-math-soft); }
+.mod-nback { --mod: var(--m-nback); --mod-soft: var(--m-nback-soft); }
+.mod-schulte { --mod: var(--m-schulte); --mod-soft: var(--m-schulte-soft); }
+.mod-stroop { --mod: var(--m-stroop); --mod-soft: var(--m-stroop-soft); }
+.mod-span { --mod: var(--m-span); --mod-soft: var(--m-span-soft); }
+.mod-meditation { --mod: var(--m-meditation); --mod-soft: var(--m-meditation-soft); }
+.mod-stats { --mod: var(--accent); --mod-soft: var(--accent-soft); }
 
 * {
 	box-sizing: border-box;
@@ -43,6 +95,7 @@
 
 html {
 	-webkit-text-size-adjust: 100%;
+	scroll-behavior: smooth;
 }
 
 body {
@@ -54,119 +107,236 @@ body {
 	line-height: 1.65;
 }
 
-/* 正文链接：群青墨色，下划线稍偏下 */
 a {
 	color: var(--accent-strong);
 	text-underline-offset: 3px;
 }
 
-/* 键盘可达性：焦点环统一群青 */
 :focus-visible {
-	outline: 2px solid var(--accent);
+	outline: 2px solid var(--mod, var(--accent));
 	outline-offset: 2px;
 }
 
+/* 滚动条走自己的视觉语言：细轨、瓷蓝thumb、悬停加深 */
+* {
+	scrollbar-width: thin;
+	scrollbar-color: var(--line-strong) transparent;
+}
+::-webkit-scrollbar {
+	width: 10px;
+	height: 6px;
+}
+::-webkit-scrollbar-track {
+	background: transparent;
+}
+::-webkit-scrollbar-thumb {
+	background: var(--line-strong);
+	border-radius: 999px;
+	border: 2px solid var(--bg);
+}
+::-webkit-scrollbar-thumb:hover {
+	background: var(--ink-3);
+}
+
 .container {
-	max-width: 760px;
+	max-width: 780px;
 	margin-inline: auto;
-	padding: 20px 20px 64px;
+	padding: 20px 20px 72px;
 }
 
-/* 数字等宽：计分与倒计时专用，防跳动抖宽（ADR-0014） */
+.container.wide {
+	max-width: 1100px;
+}
+
+/* 锚点跳转落在 sticky 顶栏下方 */
+[id] {
+	scroll-margin-top: calc(var(--topbar-h) + 14px);
+}
+
+/* 数字等宽：计分与倒计时专用，防跳动抖宽 */
 .num {
+	font-family: var(--font-num);
 	font-variant-numeric: tabular-nums;
+	font-feature-settings: "tnum";
 }
 
-/* ---------- 顶栏导航：纸面上一行字，当前页墨线下划 ---------- */
+/* ---------- 顶栏：白瓷悬浮 + 底部光谱签名线 ---------- */
 
 .topbar {
 	position: sticky;
 	top: 0;
-	z-index: 10;
-	background: rgb(255 254 249 / 0.92);
-	backdrop-filter: blur(8px);
+	z-index: 50;
+	background: rgb(255 255 255 / 0.86);
+	backdrop-filter: blur(10px) saturate(1.5);
+	-webkit-backdrop-filter: blur(10px) saturate(1.5);
 	border-bottom: 1px solid var(--line);
+}
+
+.topbar::after {
+	content: "";
+	display: block;
+	height: 2px;
+	background: var(--spectrum);
+	opacity: 0.9;
 }
 
 .nav {
 	display: flex;
 	align-items: center;
-	gap: 4px;
-	flex-wrap: wrap;
-	max-width: 760px;
+	gap: 8px;
+	max-width: 1100px;
 	margin-inline: auto;
-	padding: 10px 20px;
+	padding: 0 16px;
+	height: var(--topbar-h);
 }
 
-/* 品牌：墨字 + 群青小印 */
 .brand {
-	font-weight: 800;
-	font-size: 17px;
-	color: var(--ink);
-	text-decoration: none;
-	margin-right: 14px;
-	letter-spacing: 0.02em;
 	display: inline-flex;
 	align-items: center;
+	gap: 8px;
+	font-weight: 800;
+	font-size: 16.5px;
+	color: var(--ink);
+	text-decoration: none;
+	letter-spacing: 0.02em;
+	white-space: nowrap;
+	flex: none;
 }
 
-.brand::before {
-	content: "";
-	width: 9px;
-	height: 9px;
-	margin-right: 8px;
-	background: var(--accent);
-	border-radius: 2px;
-	transform: rotate(45deg);
+.brand-mark {
+	width: 22px;
+	height: 22px;
+	display: block;
 }
 
-.nav a {
+.nav-links {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	overflow-x: auto;
+	padding: 4px 2px;
+	scrollbar-width: thin;
+}
+
+.nav-links a {
 	color: var(--ink-2);
 	text-decoration: none;
-	font-size: 15px;
+	font-size: 14.5px;
 	padding: 5px 11px;
-	border-radius: var(--radius-s);
-	transition: color 0.15s;
+	border-radius: 8px;
+	white-space: nowrap;
+	transition: background 0.15s, color 0.15s;
 }
 
-.nav a:hover {
+.nav-links a:hover {
 	color: var(--ink);
+	background: var(--surface-2);
 }
 
-.nav a[aria-current="page"] {
-	color: var(--ink);
+/* 当前页 = 模块色软底药丸，导航本身就是一条光谱 */
+.nav-links a[aria-current="page"] {
+	color: var(--mod, var(--accent));
+	background: var(--mod-soft, var(--accent-soft));
 	font-weight: 700;
-	box-shadow: inset 0 -2.5px 0 var(--accent);
 }
 
-/* ---------- 页头：可带模块水印（.wm 由各页提供图形）---------- */
+/* 全局静音开关：一个按钮关掉全站所有声音 */
+.sound-toggle {
+	flex: none;
+	margin-left: auto;
+	width: 36px;
+	height: 36px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border: 1px solid var(--line);
+	border-radius: 9px;
+	background: var(--surface);
+	color: var(--ink-2);
+	cursor: pointer;
+	transition: color 0.15s, border-color 0.15s;
+}
+
+.sound-toggle:hover {
+	color: var(--ink);
+	border-color: var(--line-strong);
+}
+
+.sound-toggle svg {
+	width: 18px;
+	height: 18px;
+}
+
+.sound-toggle .i-off {
+	display: none;
+}
+
+.sound-toggle[aria-pressed="false"] {
+	color: var(--ink-3);
+}
+
+.sound-toggle[aria-pressed="false"] .i-on {
+	display: none;
+}
+
+.sound-toggle[aria-pressed="false"] .i-off {
+	display: block;
+}
+
+/* ---------- 页头：能力标签 + 模块色水印 ---------- */
 
 .page-head {
 	position: relative;
-	margin: 28px 0 20px;
+	margin: 30px 0 22px;
+	padding-right: 120px;
+	min-height: 96px;
 }
 
 .page-head h1 {
-	margin: 0 0 4px;
-	font-size: 27px;
+	margin: 0 0 6px;
+	font-size: 30px;
 	font-weight: 800;
 	letter-spacing: 0.01em;
+	line-height: 1.25;
 }
 
 .page-head .sub {
 	margin: 0;
 	color: var(--ink-2);
 	font-size: 15px;
+	max-width: 34em;
 }
 
-/* 页眉右侧水墨水印：各页塞自己的模块 SVG，淡到只当纸纹 */
+/* 能力标签：这个模块练的是哪块心智，信息而非装饰 */
+.ability-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	font-size: 12.5px;
+	font-weight: 600;
+	color: var(--mod, var(--accent));
+	background: var(--mod-soft, var(--accent-soft));
+	padding: 3px 12px;
+	border-radius: 999px;
+	margin-bottom: 10px;
+}
+
+.ability-pill::before {
+	content: "";
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: currentColor;
+}
+
 .page-head .wm {
 	position: absolute;
 	right: 0;
-	top: -6px;
-	width: 110px;
-	height: 110px;
-	opacity: 0.06;
+	top: -8px;
+	width: 116px;
+	height: 116px;
+	color: var(--mod, var(--accent));
+	opacity: 0.16;
 	pointer-events: none;
 }
 
@@ -176,25 +346,31 @@ a {
 }
 
 @media (max-width: 560px) {
+	.page-head {
+		padding-right: 84px;
+	}
 	.page-head .wm {
-		width: 76px;
-		height: 76px;
+		width: 80px;
+		height: 80px;
+	}
+	.page-head h1 {
+		font-size: 26px;
 	}
 }
 
-/* ---------- 卡片：册页白 + 纸纹线描边 ---------- */
+/* ---------- 卡片 ---------- */
 
 .card {
 	background: var(--surface);
 	border: 1px solid var(--line);
 	border-radius: var(--radius);
 	box-shadow: var(--shadow);
-	padding: 22px;
-	margin: 16px 0;
+	padding: 24px;
+	margin: 18px 0;
 }
 
 .card h2 {
-	margin: 0 0 12px;
+	margin: 0 0 14px;
 	font-size: 18px;
 }
 
@@ -204,14 +380,17 @@ a {
 	margin-top: 10px;
 }
 
-/* 训练盘面：点阵纸 + 墨框 =「开考」信号，入场一次淡入 */
+/* 训练盘面：模块色点阵纸 + 色框 =「开考」信号，入场一次淡入 */
 .card.board {
-	border: 1.5px solid var(--ink);
+	border-color: color-mix(in srgb, var(--mod, var(--accent)) 32%, var(--line));
 	background-color: var(--surface);
-	background-image: radial-gradient(var(--dot) 1px, transparent 1.2px);
+	background-image: radial-gradient(
+		color-mix(in srgb, var(--mod, var(--accent)) 16%, transparent) 1px,
+		transparent 1.4px
+	);
 	background-size: 22px 22px;
 	background-position: 11px 11px;
-	animation: board-in 220ms ease-out;
+	animation: board-in 240ms ease-out;
 }
 
 @keyframes board-in {
@@ -225,112 +404,7 @@ a {
 	}
 }
 
-/* ---------- 首页模块入口：练习册封面卡 ---------- */
-
-.entry-grid {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-	gap: 14px;
-	margin: 18px 0;
-}
-
-.entry-card {
-	display: block;
-	background: var(--surface);
-	border: 1px solid var(--line);
-	border-top: 3px solid var(--ink);
-	border-radius: var(--radius);
-	box-shadow: var(--shadow);
-	padding: 18px;
-	text-decoration: none;
-	color: var(--ink);
-	transition: transform 0.15s, border-color 0.15s;
-}
-
-.entry-card:hover {
-	transform: translateY(-2px);
-	border-color: var(--ink);
-}
-
-.entry-card .icon {
-	width: 27px;
-	height: 27px;
-	margin: 1px 0 10px;
-	display: block;
-}
-
-.entry-card .name {
-	font-size: 18px;
-	font-weight: 700;
-	margin: 0 0 2px;
-}
-
-.entry-card .desc {
-	font-size: 13.5px;
-	color: var(--ink-2);
-}
-
-/* 今日状态徽标：未练 = 纸纹线小签，已练 = 绿墨印章 */
-.badge {
-	display: inline-block;
-	margin-top: 11px;
-	font-size: 12.5px;
-	padding: 1px 9px;
-	border-radius: 3px;
-	border: 1px solid var(--line);
-	color: var(--ink-3);
-	letter-spacing: 0.06em;
-}
-
-.badge.done {
-	border: 1.5px solid var(--good);
-	color: var(--good);
-	font-weight: 600;
-	letter-spacing: 0.08em;
-	transform: rotate(-2deg);
-}
-
-/* ---------- 统计总览：一张成绩单，竖线分栏 ---------- */
-
-.stat-row {
-	display: grid;
-	grid-template-columns: repeat(3, 1fr);
-	background: var(--surface);
-	border: 1px solid var(--line);
-	border-radius: var(--radius);
-	box-shadow: var(--shadow);
-	margin: 18px 0;
-	overflow: hidden;
-}
-
-.stat-cell {
-	padding: 16px 8px;
-	text-align: center;
-	border-left: 1px solid var(--line);
-}
-
-.stat-cell:first-child {
-	border-left: none;
-}
-
-.stat-cell .value {
-	font-size: 32px;
-	font-weight: 800;
-	color: var(--ink);
-	line-height: 1.2;
-}
-
-.stat-cell .value.hot {
-	color: var(--accent);
-}
-
-.stat-cell .label {
-	font-size: 13px;
-	color: var(--ink-3);
-	margin-top: 2px;
-}
-
-/* ---------- 分段选择器：答题卡「涂卡」---------- */
+/* ---------- 分段选择器：选中即涂满模块色 ---------- */
 
 .seg {
 	display: flex;
@@ -347,19 +421,20 @@ a {
 	background: var(--surface);
 	color: var(--ink-2);
 	cursor: pointer;
-	transition: border-color 0.15s, color 0.15s;
+	transition: border-color 0.15s, color 0.15s, background 0.15s;
 }
 
 .seg button:hover {
-	border-color: var(--ink-3);
+	border-color: var(--line-strong);
 	color: var(--ink);
 }
 
 .seg button[aria-pressed="true"] {
-	background: var(--accent);
-	border-color: var(--accent);
+	background: var(--mod, var(--accent));
+	border-color: transparent;
 	color: #fff;
 	font-weight: 600;
+	box-shadow: 0 5px 14px -6px color-mix(in srgb, var(--mod, var(--accent)) 70%, transparent);
 }
 
 .seg-title {
@@ -375,20 +450,26 @@ a {
 /* ---------- 按钮 ---------- */
 
 .btn {
+	display: inline-block;
 	font: inherit;
 	font-size: 16px;
-	font-weight: 600;
+	font-weight: 700;
 	padding: 12px 26px;
-	border-radius: 6px;
+	border-radius: 10px;
 	border: none;
-	background: var(--accent);
+	background: var(--mod, var(--accent));
 	color: #fff;
 	cursor: pointer;
-	transition: background 0.15s, transform 0.15s;
+	text-decoration: none;
+	text-align: center;
+	transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+	box-shadow: 0 6px 16px -8px color-mix(in srgb, var(--mod, var(--accent)) 80%, transparent);
 }
 
 .btn:hover {
-	background: var(--accent-strong);
+	background: color-mix(in srgb, var(--mod, var(--accent)) 86%, #10142a);
+	color: #fff;
+	transform: translateY(-1px);
 }
 
 .btn:active {
@@ -405,11 +486,12 @@ a {
 	background: var(--surface);
 	color: var(--ink-2);
 	border: 1px solid var(--line);
-	font-weight: 500;
+	font-weight: 600;
+	box-shadow: none;
 }
 
 .btn.ghost:hover {
-	border-color: var(--ink-3);
+	border-color: var(--line-strong);
 	color: var(--ink);
 	background: var(--surface);
 }
@@ -420,7 +502,331 @@ a {
 	padding: 16px;
 }
 
-/* ---------- 明细行列表（统计页）---------- */
+/* ---------- 训练共享组件：盘顶 / 计时 / 进度线 ---------- */
+
+.game-top {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.timer {
+	font-family: var(--font-num);
+	font-variant-numeric: tabular-nums;
+	font-size: 54px;
+	font-weight: 700;
+	color: var(--ink);
+	line-height: 1;
+}
+
+.timer.low {
+	color: var(--bad);
+}
+
+.time-track {
+	height: 4px;
+	background: var(--surface-2);
+	border-radius: 999px;
+	overflow: hidden;
+	margin: 12px 0 4px;
+}
+
+.time-bar {
+	height: 100%;
+	width: 100%;
+	background: var(--mod, var(--accent));
+	border-radius: 999px;
+	transition: width 0.3s linear;
+}
+
+.time-bar.low {
+	background: var(--bad);
+}
+
+.progress-line {
+	color: var(--ink-3);
+	font-size: 15px;
+	font-weight: 600;
+}
+
+/* ---------- 结果共享组件 ---------- */
+
+.score {
+	font-family: var(--font-num);
+	font-variant-numeric: tabular-nums;
+	font-size: 56px;
+	font-weight: 700;
+	color: var(--mod, var(--accent));
+	line-height: 1.1;
+}
+
+.score-line {
+	color: var(--ink-2);
+	margin: 6px 0 4px;
+	font-size: 15px;
+}
+
+.best-line {
+	color: var(--ink-3);
+	font-size: 13.5px;
+	margin: 2px 0 14px;
+}
+
+.record-tag {
+	display: inline-block;
+	font-size: 12.5px;
+	font-weight: 700;
+	color: var(--warn);
+	background: var(--warn-soft);
+	border-radius: 999px;
+	padding: 2px 11px;
+	margin-left: 8px;
+	vertical-align: 2px;
+}
+
+.result-cells {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
+	gap: 10px;
+	margin: 14px 0 6px;
+	text-align: center;
+}
+
+.result-cells .v {
+	font-family: var(--font-num);
+	font-variant-numeric: tabular-nums;
+	font-size: 28px;
+	font-weight: 700;
+	color: var(--ink);
+	line-height: 1.2;
+}
+
+.result-cells .l {
+	font-size: 12.5px;
+	color: var(--ink-3);
+}
+
+.result-cells .hl .v {
+	color: var(--mod, var(--accent));
+}
+
+.result-actions {
+	display: flex;
+	gap: 10px;
+	flex-wrap: wrap;
+	margin-top: 16px;
+}
+
+/* ---------- 首页模块入口卡 ---------- */
+
+.entry-grid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 16px;
+	margin: 20px 0;
+}
+
+@media (max-width: 900px) {
+	.entry-grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+
+@media (max-width: 560px) {
+	.entry-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
+.entry-card {
+	position: relative;
+	display: block;
+	overflow: hidden;
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	box-shadow: var(--shadow);
+	padding: 20px;
+	text-decoration: none;
+	color: var(--ink);
+	transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
+}
+
+.entry-card:hover {
+	transform: translateY(-3px);
+	box-shadow: var(--shadow-lift);
+	border-color: color-mix(in srgb, var(--mod) 45%, var(--line));
+}
+
+.entry-card .card-top {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	margin-bottom: 12px;
+}
+
+.entry-card .icon-chip {
+	width: 44px;
+	height: 44px;
+	flex: none;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 12px;
+	background: var(--mod-soft);
+	color: var(--mod);
+	transition: transform 0.18s;
+}
+
+.entry-card:hover .icon-chip {
+	transform: scale(1.06) rotate(-3deg);
+}
+
+.entry-card .icon-chip svg {
+	width: 26px;
+	height: 26px;
+}
+
+.entry-card .ability-pill {
+	margin: 0;
+	font-size: 11.5px;
+	padding: 2px 10px;
+}
+
+.entry-card .name {
+	font-size: 19px;
+	font-weight: 800;
+	margin: 0 0 3px;
+}
+
+.entry-card .desc {
+	font-size: 13.5px;
+	color: var(--ink-2);
+	margin: 0;
+	min-height: 2.6em;
+}
+
+.entry-card .meta {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	margin-top: 12px;
+}
+
+.entry-card .last {
+	font-size: 12.5px;
+	color: var(--ink-3);
+}
+
+/* 模块水印：卡右下角一大块淡色图形，各页自带 SVG */
+.entry-card .wm {
+	position: absolute;
+	right: -18px;
+	bottom: -22px;
+	width: 110px;
+	height: 110px;
+	color: var(--mod);
+	opacity: 0.08;
+	pointer-events: none;
+	transition: opacity 0.18s, transform 0.18s;
+}
+
+.entry-card:hover .wm {
+	opacity: 0.14;
+	transform: scale(1.06);
+}
+
+.entry-card .wm svg {
+	width: 100%;
+	height: 100%;
+}
+
+/* 今日状态徽标：未练 = 灰签，已练 = 模块色章 */
+.badge {
+	display: inline-block;
+	font-size: 12px;
+	padding: 1px 10px;
+	border-radius: 999px;
+	border: 1px solid var(--line);
+	color: var(--ink-3);
+	white-space: nowrap;
+}
+
+.badge.done {
+	border-color: transparent;
+	background: var(--mod-soft);
+	color: var(--mod);
+	font-weight: 700;
+}
+
+/* ---------- 今日光谱点：六模块今日是否已练 ---------- */
+
+.today-dots {
+	display: flex;
+	gap: 9px;
+	align-items: center;
+}
+
+.today-dots .td {
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	border: 2.5px solid var(--td-hue);
+	background: transparent;
+	transition: background 0.2s, box-shadow 0.2s;
+}
+
+.today-dots .td.done {
+	background: var(--td-hue);
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--td-hue) 18%, transparent);
+}
+
+/* ---------- 统计总览 ---------- */
+
+.stat-row {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: var(--radius);
+	box-shadow: var(--shadow);
+	margin: 18px 0;
+	overflow: hidden;
+}
+
+.stat-cell {
+	padding: 18px 8px;
+	text-align: center;
+	border-left: 1px solid var(--line);
+}
+
+.stat-cell:first-child {
+	border-left: none;
+}
+
+.stat-cell .value {
+	font-family: var(--font-num);
+	font-variant-numeric: tabular-nums;
+	font-size: 38px;
+	font-weight: 700;
+	color: var(--ink);
+	line-height: 1.15;
+}
+
+.stat-cell .value.hot {
+	color: var(--accent);
+}
+
+.stat-cell .label {
+	font-size: 13px;
+	color: var(--ink-3);
+	margin-top: 2px;
+}
+
+/* ---------- 明细行列表 ---------- */
 
 .rowlist {
 	list-style: none;
@@ -458,12 +864,13 @@ a {
 }
 
 .module-tag {
+	display: inline-block;
 	font-size: 12px;
-	font-weight: 600;
-	padding: 2px 9px;
-	border-radius: 3px;
-	background: var(--accent-soft);
-	color: var(--accent-strong);
+	font-weight: 700;
+	padding: 2px 10px;
+	border-radius: 999px;
+	background: var(--tag-soft, var(--accent-soft));
+	color: var(--tag, var(--accent-strong));
 	white-space: nowrap;
 }
 
@@ -474,9 +881,30 @@ a {
 	color: var(--ink-2);
 	padding: 28px 16px;
 	font-size: 14.5px;
-	border: 1px dashed var(--line);
+	border: 1.5px dashed var(--line-strong);
 	border-radius: var(--radius-s);
 	background: var(--surface-2);
+}
+
+/* ---------- 键帽提示 ---------- */
+
+.kbd-hint {
+	text-align: center;
+	color: var(--ink-3);
+	font-size: 13px;
+	margin: 14px 0 0;
+}
+
+.kbd-hint kbd {
+	font-family: var(--font-num);
+	font-size: 12px;
+	padding: 0 6px;
+	margin: 0 1px;
+	border: 1px solid var(--line-strong);
+	border-bottom-width: 2px;
+	border-radius: 4px;
+	background: var(--surface);
+	color: var(--ink-2);
 }
 
 /* ---------- JS 可用性提示（ADR-0014）---------- */
@@ -495,17 +923,49 @@ html.no-js .js-warn {
 	display: block;
 }
 
-/* ---------- 动效降级（ADR-0014：动效只答应用户动作）---------- */
+/* ---------- 光谱签名条与动效 ---------- */
+
+.spectrum-line {
+	height: 3px;
+	border-radius: 999px;
+	background: var(--spectrum);
+}
+
+/* 入场：一次编排好的升场，--d 控制阶梯延迟 */
+.rise {
+	animation: rise 0.55s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+	animation-delay: var(--d, 0s);
+}
+
+@keyframes rise {
+	from {
+		opacity: 0;
+		transform: translateY(12px);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+/* ---------- 动效降级 ---------- */
 
 @media (prefers-reduced-motion: reduce) {
-	.card.board {
+	html {
+		scroll-behavior: auto;
+	}
+	.card.board,
+	.rise {
 		animation: none;
 	}
-
 	.entry-card,
+	.entry-card .icon-chip,
+	.entry-card .wm,
 	.btn,
 	.seg button,
-	.nav a {
+	.nav-links a,
+	.sound-toggle,
+	.today-dots .td {
 		transition: none;
 	}
 }

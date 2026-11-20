@@ -1,6 +1,6 @@
 {
 	"name": "mind-gym",
-	"description": "认知训练站：心算、N-back、冥想三模块，纯静态无构建（ADR-0010/0011）。",
+	"description": "认知训练站：心算、N-back、舒尔特方格、斯特鲁普、序列记忆、冥想六模块，纯静态无构建（ADR-0010/0011）。",
 	"private": true,
 	"type": "module",
 	"scripts": {

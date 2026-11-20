@@ -1,0 +1,173 @@
+<!doctype html>
+<html class="no-js" lang="zh-CN">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>舒尔特方格 · 心智训练站</title>
+		<meta name="description" content="舒尔特方格注意力训练：按顺序点完乱序数字，越快越好。" />
+		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+		<link rel="stylesheet" href="/assets/css/base.css" />
+		<script>
+			document.documentElement.classList.remove('no-js');
+		</script>
+		<style>
+			/* ---------- 舒尔特专属 ---------- */
+			.schulte-grid {
+				display: grid;
+				gap: 8px;
+				max-width: 420px;
+				margin: 22px auto 8px;
+			}
+			.schulte-grid button {
+				aspect-ratio: 1;
+				font-family: var(--font-num);
+				font-variant-numeric: tabular-nums;
+				font-size: clamp(20px, 6vw, 30px);
+				font-weight: 700;
+				border-radius: var(--radius-s);
+				border: 1px solid var(--line);
+				background: var(--surface);
+				color: var(--ink);
+				cursor: pointer;
+				transition: background 0.1s, color 0.1s, border-color 0.1s, transform 0.06s;
+			}
+			.schulte-grid button:hover {
+				border-color: var(--mod);
+			}
+			.schulte-grid button:active {
+				transform: scale(0.96);
+			}
+			/* 点中 = 涂满模块色并淡出数字；点错 = 红闪一下 */
+			.schulte-grid button.done {
+				background: var(--mod-soft);
+				border-color: transparent;
+				color: color-mix(in srgb, var(--mod) 55%, var(--surface));
+				cursor: default;
+			}
+			.schulte-grid button.wrong {
+				animation: wrong-shake 0.3s;
+				border-color: var(--bad);
+				color: var(--bad);
+			}
+			@keyframes wrong-shake {
+				0%, 100% { transform: translateX(0); }
+				25% { transform: translateX(-4px); }
+				75% { transform: translateX(4px); }
+			}
+			.target-line {
+				text-align: center;
+				font-size: 15px;
+				color: var(--ink-2);
+				margin: 4px 0 0;
+			}
+			.target-line b {
+				font-family: var(--font-num);
+				font-size: 22px;
+				color: var(--mod);
+				padding: 0 3px;
+			}
+			@media (prefers-reduced-motion: reduce) {
+				.schulte-grid button.wrong { animation: none; }
+			}
+		</style>
+	</head>
+	<body class="mod-schulte">
+		<header class="topbar">
+			<nav class="nav" aria-label="主导航">
+				<a class="brand" href="/">
+					<svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+						<circle cx="5" cy="7.5" r="2.7" fill="var(--m-math)" />
+						<circle cx="12" cy="7.5" r="2.7" fill="var(--m-schulte)" />
+						<circle cx="19" cy="7.5" r="2.7" fill="var(--m-span)" />
+						<circle cx="5" cy="16.5" r="2.7" fill="var(--m-nback)" />
+						<circle cx="12" cy="16.5" r="2.7" fill="var(--m-stroop)" />
+						<circle cx="19" cy="16.5" r="2.7" fill="var(--m-meditation)" />
+					</svg>
+					心智训练站
+				</a>
+				<div class="nav-links">
+					<a href="/">首页</a>
+					<a href="/math/">心算</a>
+					<a href="/nback/">N-back</a>
+					<a href="/schulte/" aria-current="page">舒尔特</a>
+					<a href="/stroop/">色词</a>
+					<a href="/span/">序列</a>
+					<a href="/meditation/">冥想</a>
+					<a href="/stats/">统计</a>
+				</div>
+				<button id="sound-toggle" class="sound-toggle" type="button" aria-pressed="true">
+					<svg class="i-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M4 9v6h4l5 4V5L8 9H4z" /><path d="M16.5 8.5a5 5 0 0 1 0 7" /><path d="M19 6a8.5 8.5 0 0 1 0 12" />
+					</svg>
+					<svg class="i-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M4 9v6h4l5 4V5L8 9H4z" /><path d="M17 9l4 6M21 9l-4 6" />
+					</svg>
+				</button>
+			</nav>
+		</header>
+
+		<main class="container">
+			<div class="page-head">
+				<span class="wm" aria-hidden="true">
+					<svg viewBox="0 0 24 24" fill="none">
+						<g stroke="currentColor" stroke-width="1.2">
+							<rect x="2.5" y="2.5" width="5.6" height="5.6" rx="1.2" />
+							<rect x="9.2" y="2.5" width="5.6" height="5.6" rx="1.2" />
+							<rect x="15.9" y="2.5" width="5.6" height="5.6" rx="1.2" />
+							<rect x="2.5" y="9.2" width="5.6" height="5.6" rx="1.2" />
+							<rect x="15.9" y="9.2" width="5.6" height="5.6" rx="1.2" />
+							<rect x="2.5" y="15.9" width="5.6" height="5.6" rx="1.2" />
+							<rect x="9.2" y="15.9" width="5.6" height="5.6" rx="1.2" />
+							<rect x="15.9" y="15.9" width="5.6" height="5.6" rx="1.2" />
+						</g>
+						<rect x="9.2" y="9.2" width="5.6" height="5.6" rx="1.2" fill="currentColor" />
+					</svg>
+				</span>
+				<span class="ability-pill">注意广度</span>
+				<h1>舒尔特方格</h1>
+				<p class="sub">数字乱序铺满方格，从 1 开始按顺序点完。视线放宽，别逐格找。</p>
+			</div>
+
+			<div class="js-warn">舒尔特方格需要启用 JavaScript，否则无法训练。</div>
+
+			<!-- 开局配置 -->
+			<section class="card" id="setup">
+				<h2>选择方格阶数</h2>
+				<div class="seg-title">阶数（数字 1 到阶数²）</div>
+				<div class="seg" id="seg-size">
+					<button data-value="3" aria-pressed="false">3×3 热身</button>
+					<button data-value="4" aria-pressed="false">4×4 进阶</button>
+					<button data-value="5" aria-pressed="true">5×5 标准</button>
+				</div>
+				<p class="hint">点第一个数字即开始计时，点错会记一次错但不前进。成绩只在同阶内可比。</p>
+				<div style="margin-top: 18px">
+					<button class="btn big" id="btn-start">开始训练</button>
+				</div>
+			</section>
+
+			<!-- 训练进行中 -->
+			<section class="card board" id="game" hidden>
+				<div class="game-top">
+					<span class="timer num" id="timer">0.0</span>
+					<span class="progress-line num" id="progress">错 0 次</span>
+				</div>
+				<div class="schulte-grid" id="grid"></div>
+				<p class="target-line">找到 <b class="num" id="target">1</b> 并点它</p>
+			</section>
+
+			<!-- 结果 -->
+			<section class="card" id="result" hidden>
+				<h2>本轮成绩</h2>
+				<div class="score num" id="r-time">0.0 秒</div>
+				<p class="score-line num" id="r-detail"></p>
+				<p class="best-line" id="r-best"></p>
+				<div class="result-actions">
+					<button class="btn" id="btn-again">再来一轮</button>
+					<a class="btn ghost" href="/stats/">看统计</a>
+				</div>
+			</section>
+		</main>
+
+		<script type="module" src="/assets/js/schulte/game.js"></script>
+	</body>
+</html>

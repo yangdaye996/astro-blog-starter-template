@@ -1,29 +1,22 @@
 // 冥想模块（ADR-0013）：静坐计时 + 可选呼吸引导（4 秒吸 / 4 秒呼）。
 // 结束钟声由 Web Audio 合成（audio.js，无音频文件）。
 
-import { addSession } from '../store.js';
+import { addSession, loadSessions } from '../store.js';
+import { bestSession } from '../stats.js';
+import { bindSeg, initSoundToggle } from '../ui.js';
 import { bell } from '../audio.js';
+
+initSoundToggle();
 
 const TITLE_REST = '冥想 · 心智训练站';
 
 // ---------- 分段选择器 ----------
 
-function setupSeg(el, onChange) {
-	for (const btn of el.querySelectorAll('button')) {
-		btn.addEventListener('click', () => {
-			for (const b of el.querySelectorAll('button')) {
-				b.setAttribute('aria-pressed', b === btn ? 'true' : 'false');
-			}
-			onChange(btn.dataset.value);
-		});
-	}
-}
-
 let plannedMin = 5;
 let breathing = true;
 
-setupSeg(document.getElementById('seg-min'), (v) => (plannedMin = Number(v)));
-setupSeg(document.getElementById('seg-breath'), (v) => (breathing = v === 'on'));
+bindSeg(document.getElementById('seg-min'), (v) => (plannedMin = Number(v)));
+bindSeg(document.getElementById('seg-breath'), (v) => (breathing = v === 'on'));
 
 // ---------- 会话状态 ----------
 
@@ -74,6 +67,7 @@ function sitPhase() {
 	sitTs = Date.now();
 	totalMs = plannedMin * 60000;
 	$('count-in').hidden = true;
+	bell(528, 0.4); // 开场钟，比结束清亮
 
 	if (breathing) {
 		// 球的 CSS 动画（8s 周期）与吸/呼文案同一个 tick 启动，相位对齐
@@ -110,6 +104,12 @@ function finish(completed) {
 	phase = 'idle';
 	gameEl.hidden = true;
 
+	// 先取旧最佳再写入：最长静坐（分钟）
+	const prior = bestSession(loadSessions(), 'meditation');
+	const priorMin = prior ? Math.round((prior.result.actualSec / 60) * 10) / 10 : 0;
+	const thisMin = Math.round((actualSec / 60) * 10) / 10;
+	const isRecord = actualSec > 0 && thisMin > priorMin;
+
 	if (actualSec > 0) {
 		addSession({
 			module: 'meditation',
@@ -124,6 +124,12 @@ function finish(completed) {
 	$('r-detail').textContent = completed
 		? `完成 ✓ · 计划 ${plannedMin} 分钟 · 呼吸引导${breathing ? '开' : '关'}`
 		: `中途结束 · 静坐 ${actualSec} 秒 · 已记录为未完成`;
+	$('r-best').textContent = prior
+		? `最长静坐 ${priorMin} 分钟`
+		: '这是你的第一次静坐';
+	if (isRecord) {
+		$('r-best').insertAdjacentHTML('beforeend', '<span class="record-tag">新纪录</span>');
+	}
 	resultEl.hidden = false;
 }
 

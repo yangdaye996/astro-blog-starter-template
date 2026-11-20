@@ -4,79 +4,334 @@
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<title>心智训练站</title>
-		<meta name="description" content="心算、N-back、冥想——每天练一练的认知训练台。记录存本地浏览器。" />
+		<meta name="description" content="心算、N-back、舒尔特、斯特鲁普、序列记忆、冥想——六块心智能力，每天练一练。记录存本地浏览器。" />
 		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 		<link rel="stylesheet" href="/assets/css/base.css" />
 		<script>
 			document.documentElement.classList.remove('no-js');
 		</script>
+		<style>
+			/* ---------- 首页专属 ---------- */
+			.hero {
+				position: relative;
+				overflow: hidden;
+				border-radius: var(--radius);
+				border: 1px solid var(--line);
+				background: var(--surface);
+				box-shadow: var(--shadow);
+				padding: 34px 30px 30px;
+				margin: 22px 0 8px;
+			}
+			/* 漂移光晕：两团模块色慢速游移，页面一打开就在呼吸 */
+			.hero::before,
+			.hero::after {
+				content: "";
+				position: absolute;
+				width: 420px;
+				height: 420px;
+				border-radius: 50%;
+				filter: blur(60px);
+				opacity: 0.5;
+				pointer-events: none;
+			}
+			.hero::before {
+				background: radial-gradient(circle, var(--m-math), transparent 68%);
+				top: -180px;
+				left: -120px;
+				animation: drift-a 22s ease-in-out infinite alternate;
+			}
+			.hero::after {
+				background: radial-gradient(circle, var(--m-stroop), transparent 68%);
+				bottom: -200px;
+				right: -100px;
+				animation: drift-b 26s ease-in-out infinite alternate;
+			}
+			@keyframes drift-a {
+				from { transform: translate(0, 0) scale(1); }
+				to { transform: translate(120px, 60px) scale(1.25); }
+			}
+			@keyframes drift-b {
+				from { transform: translate(0, 0) scale(1.1); }
+				to { transform: translate(-110px, -50px) scale(0.9); }
+			}
+			.hero-inner {
+				position: relative;
+				z-index: 1;
+				display: grid;
+				grid-template-columns: 1.5fr 1fr;
+				gap: 28px;
+				align-items: center;
+			}
+			.hero h1 {
+				margin: 0 0 10px;
+				font-size: clamp(30px, 5vw, 42px);
+				font-weight: 900;
+				line-height: 1.2;
+				letter-spacing: 0.01em;
+			}
+			.hero .lede {
+				margin: 0 0 18px;
+				color: var(--ink-2);
+				font-size: 16px;
+				max-width: 30em;
+			}
+			.hero-cta {
+				display: flex;
+				gap: 10px;
+				flex-wrap: wrap;
+			}
+			/* 今日光谱面板 */
+			.today-panel {
+				background: rgb(255 255 255 / 0.72);
+				backdrop-filter: blur(4px);
+				border: 1px solid var(--line);
+				border-radius: var(--radius);
+				padding: 18px 20px;
+			}
+			.today-panel .tp-title {
+				font-size: 13px;
+				color: var(--ink-3);
+				margin: 0 0 10px;
+			}
+			.today-panel .tp-streak {
+				display: flex;
+				align-items: baseline;
+				gap: 8px;
+				margin-bottom: 12px;
+			}
+			.today-panel .tp-streak .n {
+				font-family: var(--font-num);
+				font-variant-numeric: tabular-nums;
+				font-size: 46px;
+				font-weight: 700;
+				color: var(--accent);
+				line-height: 1;
+			}
+			.today-panel .tp-streak .u {
+				font-size: 14px;
+				color: var(--ink-2);
+			}
+			.today-panel .tp-meta {
+				font-size: 13px;
+				color: var(--ink-3);
+				margin: 10px 0 0;
+			}
+			.section-title {
+				display: flex;
+				align-items: baseline;
+				justify-content: space-between;
+				gap: 12px;
+				margin: 30px 0 4px;
+			}
+			.section-title h2 {
+				margin: 0;
+				font-size: 20px;
+			}
+			.section-title .more {
+				font-size: 14px;
+				text-decoration: none;
+			}
+			.foot-note {
+				color: var(--ink-3);
+				font-size: 13px;
+				text-align: center;
+				margin: 34px 0 0;
+			}
+			@media (max-width: 760px) {
+				.hero-inner {
+					grid-template-columns: 1fr;
+				}
+			}
+			@media (prefers-reduced-motion: reduce) {
+				.hero::before,
+				.hero::after {
+					animation: none;
+				}
+			}
+		</style>
 	</head>
 	<body>
 		<header class="topbar">
-			<nav class="nav">
-				<a class="brand" href="/">心智训练站</a>
-				<a href="/" aria-current="page">首页</a>
-				<a href="/math/">心算</a>
-				<a href="/nback/">N-back</a>
-				<a href="/meditation/">冥想</a>
-				<a href="/stats/">统计</a>
+			<nav class="nav" aria-label="主导航">
+				<a class="brand" href="/">
+					<svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true">
+						<circle cx="5" cy="7.5" r="2.7" fill="var(--m-math)" />
+						<circle cx="12" cy="7.5" r="2.7" fill="var(--m-schulte)" />
+						<circle cx="19" cy="7.5" r="2.7" fill="var(--m-span)" />
+						<circle cx="5" cy="16.5" r="2.7" fill="var(--m-nback)" />
+						<circle cx="12" cy="16.5" r="2.7" fill="var(--m-stroop)" />
+						<circle cx="19" cy="16.5" r="2.7" fill="var(--m-meditation)" />
+					</svg>
+					心智训练站
+				</a>
+				<div class="nav-links">
+					<a href="/" aria-current="page">首页</a>
+					<a href="/math/">心算</a>
+					<a href="/nback/">N-back</a>
+					<a href="/schulte/">舒尔特</a>
+					<a href="/stroop/">色词</a>
+					<a href="/span/">序列</a>
+					<a href="/meditation/">冥想</a>
+					<a href="/stats/">统计</a>
+				</div>
+				<button id="sound-toggle" class="sound-toggle" type="button" aria-pressed="true">
+					<svg class="i-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M4 9v6h4l5 4V5L8 9H4z" /><path d="M16.5 8.5a5 5 0 0 1 0 7" /><path d="M19 6a8.5 8.5 0 0 1 0 12" />
+					</svg>
+					<svg class="i-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M4 9v6h4l5 4V5L8 9H4z" /><path d="M17 9l4 6M21 9l-4 6" />
+					</svg>
+				</button>
 			</nav>
 		</header>
 
-		<main class="container">
-			<div class="page-head">
-				<h1>心智训练站</h1>
-				<p class="sub">三件事，每天练一练。记录只存在你这台浏览器里。</p>
+		<main class="container wide">
+			<!-- 英雄区：今日光谱 + 一句话主张 -->
+			<section class="hero rise">
+				<div class="hero-inner">
+					<div>
+						<h1>六块心智，<br />每天练一练。</h1>
+						<p class="lede">计算、记忆、注意、抗干扰、广度、平静——各有一个训练场。记录只存在你这台浏览器里。</p>
+						<div class="hero-cta">
+							<a class="btn" href="#modules">挑一个开始</a>
+							<a class="btn ghost" href="/stats/">看我的统计</a>
+						</div>
+					</div>
+					<div class="today-panel" id="today-panel">
+						<p class="tp-title">今日光谱 · 练过即点亮</p>
+						<div class="today-dots" id="today-dots" aria-label="今日各模块训练状态"></div>
+						<div class="tp-streak" style="margin-top: 14px">
+							<span class="n num" id="tp-streak">0</span>
+							<span class="u">天连续训练</span>
+						</div>
+						<p class="tp-meta num" id="tp-meta">本周 0 次 · 共 0 次</p>
+					</div>
+				</div>
+			</section>
+			<div class="spectrum-line rise" style="--d: 0.06s" aria-hidden="true"></div>
+
+			<!-- 六模块入口 -->
+			<div class="section-title" id="modules">
+				<h2>训练场</h2>
+				<span class="more" style="color: var(--ink-3); font-size: 13px">点卡片进入</span>
 			</div>
-
-			<!-- 连续与总量摘要，home.js 现算填充；无 JS 时不显示 -->
-			<p class="num" id="summary" style="color: var(--ink-2); font-size: 15px; margin: 0" hidden></p>
-
-			<div class="entry-grid">
-				<a class="entry-card" href="/math/">
-					<svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-						<rect x="2.5" y="2.5" width="19" height="19" rx="5" stroke="currentColor" stroke-width="1.7" />
-						<path d="M9.2 9.2l5.6 5.6M14.8 9.2l-5.6 5.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
-					</svg>
+			<div class="entry-grid" id="entry-grid">
+				<a class="entry-card mod-math rise" style="--d: 0.08s" href="/math/">
+					<span class="wm" aria-hidden="true">
+						<svg viewBox="0 0 24 24" fill="none"><rect x="2.5" y="2.5" width="19" height="19" rx="5" stroke="currentColor" stroke-width="1.4" /><path d="M8.5 8.5l7 7M15.5 8.5l-7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" /></svg>
+					</span>
+					<div class="card-top">
+						<span class="icon-chip"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="5" stroke="currentColor" stroke-width="1.7" /><path d="M9.2 9.2l5.6 5.6M14.8 9.2l-5.6 5.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" /></svg></span>
+						<span class="ability-pill">计算速度</span>
+					</div>
 					<div class="name">心算</div>
-					<div class="desc">限时冲刺，档位内答对尽可能多的题。</div>
-					<span class="badge" data-badge="math">今日未练</span>
+					<p class="desc">限时乘法冲刺，档位内答对尽可能多。</p>
+					<div class="meta">
+						<span class="badge" data-badge="math">今日未练</span>
+						<span class="last num" data-last="math"></span>
+					</div>
 				</a>
-				<a class="entry-card" href="/nback/">
-					<svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-						<g stroke="currentColor" stroke-width="1.4">
-							<rect x="2.5" y="2.5" width="4.6" height="4.6" rx="1.3" />
-							<rect x="9.7" y="2.5" width="4.6" height="4.6" rx="1.3" />
-							<rect x="16.9" y="2.5" width="4.6" height="4.6" rx="1.3" />
-							<rect x="2.5" y="9.7" width="4.6" height="4.6" rx="1.3" />
-							<rect x="16.9" y="9.7" width="4.6" height="4.6" rx="1.3" />
-							<rect x="2.5" y="16.9" width="4.6" height="4.6" rx="1.3" />
-							<rect x="9.7" y="16.9" width="4.6" height="4.6" rx="1.3" />
-							<rect x="16.9" y="16.9" width="4.6" height="4.6" rx="1.3" />
-						</g>
-						<rect x="9.7" y="9.7" width="4.6" height="4.6" rx="1.3" fill="currentColor" />
-					</svg>
+
+				<a class="entry-card mod-nback rise" style="--d: 0.12s" href="/nback/">
+					<span class="wm" aria-hidden="true">
+						<svg viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.2"><rect x="2.5" y="2.5" width="4.6" height="4.6" rx="1.3" /><rect x="9.7" y="2.5" width="4.6" height="4.6" rx="1.3" /><rect x="16.9" y="2.5" width="4.6" height="4.6" rx="1.3" /><rect x="2.5" y="9.7" width="4.6" height="4.6" rx="1.3" /><rect x="16.9" y="9.7" width="4.6" height="4.6" rx="1.3" /><rect x="2.5" y="16.9" width="4.6" height="4.6" rx="1.3" /><rect x="9.7" y="16.9" width="4.6" height="4.6" rx="1.3" /><rect x="16.9" y="16.9" width="4.6" height="4.6" rx="1.3" /></g><rect x="9.7" y="9.7" width="4.6" height="4.6" rx="1.3" fill="currentColor" /></svg>
+					</span>
+					<div class="card-top">
+						<span class="icon-chip"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><g stroke="currentColor" stroke-width="1.4"><rect x="2.5" y="2.5" width="4.6" height="4.6" rx="1.3" /><rect x="9.7" y="2.5" width="4.6" height="4.6" rx="1.3" /><rect x="16.9" y="2.5" width="4.6" height="4.6" rx="1.3" /><rect x="2.5" y="9.7" width="4.6" height="4.6" rx="1.3" /><rect x="16.9" y="9.7" width="4.6" height="4.6" rx="1.3" /><rect x="2.5" y="16.9" width="4.6" height="4.6" rx="1.3" /><rect x="9.7" y="16.9" width="4.6" height="4.6" rx="1.3" /><rect x="16.9" y="16.9" width="4.6" height="4.6" rx="1.3" /></g><rect x="9.7" y="9.7" width="4.6" height="4.6" rx="1.3" fill="currentColor" /></svg></span>
+						<span class="ability-pill">工作记忆</span>
+					</div>
 					<div class="name">N-back</div>
-					<div class="desc">网格位置记忆，工作硬骨头。</div>
-					<span class="badge" data-badge="nback">今日未练</span>
+					<p class="desc">网格位置回溯，与 n 步前相同就按。</p>
+					<div class="meta">
+						<span class="badge" data-badge="nback">今日未练</span>
+						<span class="last num" data-last="nback"></span>
+					</div>
 				</a>
-				<a class="entry-card" href="/meditation/">
-					<svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-						<circle cx="12" cy="12" r="8.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="44 10" transform="rotate(-55 12 12)" />
-					</svg>
+
+				<a class="entry-card mod-schulte rise" style="--d: 0.16s" href="/schulte/">
+					<span class="wm" aria-hidden="true">
+						<svg viewBox="0 0 24 24" fill="none"><g stroke="currentColor" stroke-width="1.2"><rect x="2.5" y="2.5" width="5.6" height="5.6" rx="1.2" /><rect x="9.2" y="2.5" width="5.6" height="5.6" rx="1.2" /><rect x="15.9" y="2.5" width="5.6" height="5.6" rx="1.2" /><rect x="2.5" y="9.2" width="5.6" height="5.6" rx="1.2" /><rect x="15.9" y="9.2" width="5.6" height="5.6" rx="1.2" /><rect x="2.5" y="15.9" width="5.6" height="5.6" rx="1.2" /><rect x="9.2" y="15.9" width="5.6" height="5.6" rx="1.2" /><rect x="15.9" y="15.9" width="5.6" height="5.6" rx="1.2" /></g><rect x="9.2" y="9.2" width="5.6" height="5.6" rx="1.2" fill="currentColor" /></svg>
+					</span>
+					<div class="card-top">
+						<span class="icon-chip"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><g stroke="currentColor" stroke-width="1.4"><rect x="2.5" y="2.5" width="5.6" height="5.6" rx="1.2" /><rect x="9.2" y="2.5" width="5.6" height="5.6" rx="1.2" /><rect x="15.9" y="2.5" width="5.6" height="5.6" rx="1.2" /><rect x="2.5" y="9.2" width="5.6" height="5.6" rx="1.2" /><rect x="15.9" y="9.2" width="5.6" height="5.6" rx="1.2" /><rect x="2.5" y="15.9" width="5.6" height="5.6" rx="1.2" /><rect x="9.2" y="15.9" width="5.6" height="5.6" rx="1.2" /><rect x="15.9" y="15.9" width="5.6" height="5.6" rx="1.2" /></g><rect x="9.2" y="9.2" width="5.6" height="5.6" rx="1.2" fill="currentColor" /></svg></span>
+						<span class="ability-pill">注意广度</span>
+					</div>
+					<div class="name">舒尔特方格</div>
+					<p class="desc">按顺序点完乱序数字，越快越好。</p>
+					<div class="meta">
+						<span class="badge" data-badge="schulte">今日未练</span>
+						<span class="last num" data-last="schulte"></span>
+					</div>
+				</a>
+
+				<a class="entry-card mod-stroop rise" style="--d: 0.2s" href="/stroop/">
+					<span class="wm" aria-hidden="true">
+						<svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.4" /><circle cx="15" cy="15" r="6" stroke="currentColor" stroke-width="1.4" /><circle cx="15" cy="9" r="2.4" fill="currentColor" /></svg>
+					</span>
+					<div class="card-top">
+						<span class="icon-chip"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.6" /><circle cx="15" cy="15" r="6" stroke="currentColor" stroke-width="1.6" /><circle cx="15" cy="9" r="2.4" fill="currentColor" /></svg></span>
+						<span class="ability-pill">抗干扰</span>
+					</div>
+					<div class="name">斯特鲁普</div>
+					<p class="desc">选字的墨色，忍住别读字义。</p>
+					<div class="meta">
+						<span class="badge" data-badge="stroop">今日未练</span>
+						<span class="last num" data-last="stroop"></span>
+					</div>
+				</a>
+
+				<a class="entry-card mod-span rise" style="--d: 0.24s" href="/span/">
+					<span class="wm" aria-hidden="true">
+						<svg viewBox="0 0 24 24" fill="none"><path d="M5 18L10 8l4 6 5-10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /><circle cx="5" cy="18" r="2.2" fill="currentColor" /><circle cx="10" cy="8" r="2.2" fill="currentColor" /><circle cx="14" cy="14" r="2.2" fill="currentColor" /><circle cx="19" cy="4" r="2.2" fill="currentColor" /></svg>
+					</span>
+					<div class="card-top">
+						<span class="icon-chip"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 18L10 8l4 6 5-10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /><circle cx="5" cy="18" r="2.2" fill="currentColor" /><circle cx="10" cy="8" r="2.2" fill="currentColor" /><circle cx="14" cy="14" r="2.2" fill="currentColor" /><circle cx="19" cy="4" r="2.2" fill="currentColor" /></svg></span>
+						<span class="ability-pill">记忆广度</span>
+					</div>
+					<div class="name">序列记忆</div>
+					<p class="desc">复现闪光顺序，一轮比一轮长。</p>
+					<div class="meta">
+						<span class="badge" data-badge="span">今日未练</span>
+						<span class="last num" data-last="span"></span>
+					</div>
+				</a>
+
+				<a class="entry-card mod-meditation rise" style="--d: 0.28s" href="/meditation/">
+					<span class="wm" aria-hidden="true">
+						<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-dasharray="44 10" transform="rotate(-55 12 12)" /></svg>
+					</span>
+					<div class="card-top">
+						<span class="icon-chip"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-dasharray="44 10" transform="rotate(-55 12 12)" /></svg></span>
+						<span class="ability-pill">平静专注</span>
+					</div>
 					<div class="name">冥想</div>
-					<div class="desc">静坐计时，结束时一声钟。</div>
-					<span class="badge" data-badge="meditation">今日未练</span>
+					<p class="desc">静坐计时，跟着圆球呼吸。</p>
+					<div class="meta">
+						<span class="badge" data-badge="meditation">今日未练</span>
+						<span class="last num" data-last="meditation"></span>
+					</div>
 				</a>
 			</div>
 
-			<div class="card">
-				<h2>记录说明</h2>
+			<!-- 最近训练 -->
+			<section class="card rise" style="--d: 0.3s">
+				<h2>最近训练</h2>
+				<ul class="rowlist" id="recent-list"></ul>
+				<div class="empty" id="recent-empty">
+					还没有训练记录。挑一个模块练一轮，这里就会长出你的足迹。
+				</div>
+			</section>
+
+			<!-- 记录说明 -->
+			<section class="card rise" style="--d: 0.34s">
+				<h2>记录与备份</h2>
 				<p style="margin: 0; color: var(--ink-2); font-size: 14.5px">
 					每次训练结束自动写入浏览器本地存储（localStorage）。换浏览器、清站点数据都会丢记录——去
 					<a href="/stats/">统计页</a> 导出 JSON 备份。
 				</p>
-			</div>
+			</section>
+
+			<p class="foot-note">纯静态 · 零依赖 · 无账号 · 数据只在本机</p>
 		</main>
 
 		<script type="module" src="/assets/js/home.js"></script>
